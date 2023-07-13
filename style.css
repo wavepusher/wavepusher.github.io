@@ -76,6 +76,12 @@ main {
   position: relative;
 }
 
+@media (max-width: 768px) {
+  #video-section {
+    padding-top: 60px;
+  }
+}
+
 .video-logo {
   max-width: 100%;
   width: 80%;
@@ -110,6 +116,7 @@ main {
   .logo-overlay {
     top: 40%;
     width: 90vw; /* Adjust this value as needed */
+    padding-top: 100px;
   }
 }
 
