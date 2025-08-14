@@ -1,57 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Wedding DJ Service</title>
-  <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Mouse Effect</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-  <header>
-    <nav>
-      <div class="logo">
-        <img src="header_logo.png" alt="Company Logo">
-      </div>
-      <div class="menu">
-        <ul>
-          <li><a href="https://birdsong.djintelligence.com/client/">Clients</a></li>
-          <li><a href="https://birdsong.djintelligence.com/contact/">Contact</a></li>
-        </ul>
-      </div>
-    </nav>
-  </header>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="header-logo">
+                <img src="header-logo.png" alt="Business Logo" class="header-logo-img">
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn" id="clientsBtn">Clients</button>
+                <button class="nav-btn" id="contactBtn">Contact</button>
+            </nav>
+        </div>
+    </header>
 
-  <main>
-    <section id="video-section">
-      <video src="background-video.mp4" autoplay loop muted></video>
-      <div class="logo-overlay">
-        <img src="company_logo.png" alt="Company Logo" class="video-logo">
-      </div>
-    </section>
+    <!-- Hidden video element -->
+    <video id="backgroundVideo" autoplay muted loop playsinline style="display: none;">
+        <source src="video.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
 
-    <section id="about-section">
-      <h2>About Us</h2>
-      <p>Birdsong Entertainment is a wedding DJ service based in the Ottawa-Gatineau region. We have been 
-        in operation since 2013. For existing clients, find the client area in the top right, and for new clients, use the contact form in the same area.
-      </p>
-    </section>
+    <!-- Canvas for rendering -->
+    <canvas id="mainCanvas"></canvas>
 
-<section id="about-section">
-      <h2>Insurance Policy</h2>
-      <p>Birdsong Entertainment will provide proof of liability insurance. Venues must request insurance documents a minimum of 48 hours before the event.
-      </p>
-    </section>
-      </div>
-    </section>
-  </main>
+    <!-- Logo -->
+    <img src="logo.png" alt="Business Logo" class="logo" id="defaultLogo">
+    <img src="logo-alt.png" alt="Business Logo Alt" class="logo logo-alt" id="altLogo">
 
-  <footer>
-    <p>&copy; 2023 Birdsong Entertainment. All rights reserved.</p>
-  </footer>
-  
+    <!-- Audio element -->
+    <audio id="backgroundMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Unified Control Panel -->
+    <div class="control-panel" id="controlPanel">
+        <div class="controls-content" id="panelContent">
+            <!-- Audio Controls -->
+            <div class="control-section audio-controls">
+                <button id="panelMinimizeBtn" class="control-btn" title="Settings">⚙</button>
+                <button id="playPauseBtn" class="control-btn" title="Play/Pause">▶️</button>
+                <button id="muteBtn" class="control-btn" title="Mute/Unmute">🔊</button>
+                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="50" title="Volume">
+            </div>
+            
+            <!-- Divider -->
+            <div class="control-divider"></div>
+            
+            <!-- Video Toggle -->
+            <div class="control-section video-controls">
+                <button id="videoToggleBtn" class="control-btn" title="Toggle Video Mask">👁</button>
+            </div>
+            
+            <!-- Divider -->
+            <div class="control-divider"></div>
+            
+            <!-- Shape Controls (Desktop Only) -->
+            <div class="control-section shape-controls desktop-only">
+                <button class="shape-btn active" data-shape="circle" title="Circle">○</button>
+                <button class="shape-btn" data-shape="square" title="Square">□</button>
+                <button class="shape-btn" data-shape="triangle" title="Triangle">△</button>
+                <button class="shape-btn" data-shape="star" title="Star">☆</button>
+                <button class="shape-btn" data-shape="heart" title="Heart">♡</button>
+            </div>
+            
+            <!-- Mobile Controls -->
+            <div class="control-section mobile-controls mobile-only">
+                <button id="mobileRevealBtn" class="control-btn mobile-reveal-btn" title="Touch to Reveal">👆 Touch & Drag</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Settings Button (shows when panel is minimized) -->
+    <button id="floatingSettingsBtn" class="floating-settings-btn" title="Show Controls" style="display: none;">⚙</button>
+
+    <script src="script.js"></script>
 </body>
-
 </html>
