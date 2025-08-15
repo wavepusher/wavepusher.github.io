@@ -534,9 +534,21 @@ video.addEventListener('canplay', () => {
     console.log('Video can play');
 });
 
-// Check video source
+// Check video source and network state
 console.log('Video source:', video.currentSrc || 'No source loaded');
 console.log('Video ready state:', video.readyState);
+console.log('Video network state:', video.networkState);
+console.log('Video error:', video.error);
+
+// Add more detailed debugging
+video.addEventListener('loadstart', () => {
+    console.log('Video load started - URL:', video.currentSrc);
+});
+
+video.addEventListener('loadeddata', () => {
+    console.log('Video data loaded successfully');
+    console.log('Video can play through:', video.readyState >= 4);
+});
 
 // Touch support for mobile devices
 let touchActive = false;

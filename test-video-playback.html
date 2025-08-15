@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Playback Test</title>
+</head>
+<body>
+    <h1>Video Playback Test</h1>
+    
+    <h2>Test 1: Basic Video (visible)</h2>
+    <video id="test1" width="320" height="240" controls muted autoplay>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+    
+    <h2>Test 2: Hidden Video</h2>
+    <video id="test2" style="display: none;" muted autoplay>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+    
+    <h2>Test 3: Manual Play</h2>
+    <video id="test3" width="320" height="240" controls muted>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+    <button onclick="document.getElementById('test3').play()">Play Video</button>
+    
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        // Test all videos
+        ['test1', 'test2', 'test3'].forEach(id => {
+            const video = document.getElementById(id);
+            
+            video.addEventListener('loadstart', () => {
+                output.innerHTML += `<p>${id}: Load started</p>`;
+            });
+            
+            video.addEventListener('error', (e) => {
+                output.innerHTML += `<p style="color: red;">${id}: Error - ${video.error?.message}</p>`;
+            });
+            
+            video.addEventListener('canplay', () => {
+                output.innerHTML += `<p style="color: green;">${id}: Can play!</p>`;
+            });
+            
+            video.addEventListener('playing', () => {
+                output.innerHTML += `<p style="color: blue;">${id}: Playing!</p>`;
+            });
+        });
+        
+        // Try to play hidden video after 1 second
+        setTimeout(() => {
+            document.getElementById('test2').play().then(() => {
+                output.innerHTML += '<p style="color: green;">Hidden video played successfully!</p>';
+            }).catch(err => {
+                output.innerHTML += '<p style="color: red;">Hidden video play failed: ' + err + '</p>';
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

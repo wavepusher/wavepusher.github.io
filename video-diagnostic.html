@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Diagnostic Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        video { max-width: 400px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Video Diagnostic Tool</h1>
+    
+    <div class="test">
+        <h2>Test 1: Check Video File Accessibility</h2>
+        <div id="fileTest"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Test 2: Video Element with Controls</h2>
+        <video id="testVideo" controls muted width="400">
+            <source src="video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div id="videoTest"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Test 3: Autoplay Test</h2>
+        <button onclick="testAutoplay()">Test Autoplay</button>
+        <div id="autoplayTest"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Test 4: Network Diagnostics</h2>
+        <div id="networkTest"></div>
+    </div>
+
+    <script>
+        // Test 1: Check if video file is accessible
+        fetch('video.mp4', { method: 'HEAD' })
+            .then(response => {
+                const result = document.getElementById('fileTest');
+                if (response.ok) {
+                    result.innerHTML = `
+                        <p class="success">✓ Video file found at: ${response.url}</p>
+                        <p class="info">File size: ${response.headers.get('content-length')} bytes</p>
+                        <p class="info">Content type: ${response.headers.get('content-type')}</p>
+                    `;
+                } else {
+                    result.innerHTML = `<p class="error">✗ Video file not found (${response.status})</p>`;
+                }
+            })
+            .catch(err => {
+                document.getElementById('fileTest').innerHTML = 
+                    `<p class="error">✗ Network error: ${err.message}</p>`;
+            });
+
+        // Test 2: Video element diagnostics
+        const video = document.getElementById('testVideo');
+        const videoResult = document.getElementById('videoTest');
+        
+        video.addEventListener('loadstart', () => {
+            videoResult.innerHTML += '<p class="info">• Load started</p>';
+        });
+        
+        video.addEventListener('loadedmetadata', () => {
+            videoResult.innerHTML += `<p class="success">✓ Metadata loaded - Duration: ${video.duration}s</p>`;
+        });
+        
+        video.addEventListener('canplay', () => {
+            videoResult.innerHTML += '<p class="success">✓ Video can play</p>';
+        });
+        
+        video.addEventListener('error', (e) => {
+            const errorMessages = {
+                1: 'MEDIA_ERR_ABORTED - Loading aborted',
+                2: 'MEDIA_ERR_NETWORK - Network error',
+                3: 'MEDIA_ERR_DECODE - Decoding error',
+                4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Format not supported'
+            };
+            videoResult.innerHTML += `<p class="error">✗ Error: ${errorMessages[video.error.code] || 'Unknown error'}</p>`;
+        });
+
+        // Test 3: Autoplay capability
+        function testAutoplay() {
+            const result = document.getElementById('autoplayTest');
+            const testVid = document.createElement('video');
+            testVid.muted = true;
+            testVid.src = 'video.mp4';
+            
+            testVid.play()
+                .then(() => {
+                    result.innerHTML = '<p class="success">✓ Autoplay is allowed</p>';
+                    testVid.pause();
+                })
+                .catch(err => {
+                    result.innerHTML = `<p class="error">✗ Autoplay blocked: ${err.name}</p>`;
+                });
+        }
+
+        // Test 4: Network and browser diagnostics
+        const networkResult = document.getElementById('networkTest');
+        networkResult.innerHTML = `
+            <p class="info">Browser: ${navigator.userAgent}</p>
+            <p class="info">Protocol: ${location.protocol}</p>
+            <p class="info">Host: ${location.host}</p>
+            <p class="info">Path: ${location.pathname}</p>
+        `;
+
+        // Check for HTTPS
+        if (location.protocol !== 'https:') {
+            networkResult.innerHTML += '<p class="error">⚠ Not using HTTPS - some browsers restrict autoplay on HTTP</p>';
+        }
+    </script>
+</body>
+</html>
