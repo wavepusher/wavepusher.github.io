@@ -44,14 +44,88 @@ let previousVolume = 0.5;
 let showFullVideo = false;
 
 
-// Force video to start playing
-video.play().catch(err => console.log('Video autoplay blocked:', err));
+// Handle video autoplay with proper Promise handling
+const playVideo = () => {
+    const playPromise = video.play();
+    
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Video autoplay started successfully');
+                videoPlaying = true;
+            })
+            .catch(error => {
+                console.error('Video autoplay was prevented:', error);
+                // Set up fallback for first user interaction
+                const startVideoOnInteraction = () => {
+                    video.play()
+                        .then(() => {
+                            console.log('Video started after user interaction');
+                            videoPlaying = true;
+                        })
+                        .catch(e => console.error('Video play still failed:', e));
+                };
+                
+                // Try on various user interactions
+                document.addEventListener('click', startVideoOnInteraction, { once: true });
+                document.addEventListener('touchstart', startVideoOnInteraction, { once: true });
+                document.addEventListener('mousemove', startVideoOnInteraction, { once: true });
+            });
+    }
+};
+
+// Wait for video to be ready before attempting play
+video.addEventListener('loadedmetadata', () => {
+    console.log('Video metadata loaded, attempting to play...');
+    playVideo();
+});
+
+// Also try playing if video is already ready
+if (video.readyState >= 3) {
+    playVideo();
+}
 
 // Ensure video keeps playing
 video.addEventListener('pause', () => {
     if (!video.ended) {
         video.play();
     }
+});
+
+// Add comprehensive video error handling
+video.addEventListener('error', (e) => {
+    console.error('Video loading error:', e);
+    console.error('Video error code:', video.error?.code);
+    console.error('Video error message:', video.error?.message);
+    
+    // Provide user-friendly error messages
+    switch(video.error?.code) {
+        case 1:
+            console.error('Video loading aborted');
+            break;
+        case 2:
+            console.error('Network error while loading video');
+            break;
+        case 3:
+            console.error('Video decoding error');
+            break;
+        case 4:
+            console.error('Video format not supported');
+            break;
+    }
+});
+
+// Add loading state handling
+video.addEventListener('waiting', () => {
+    console.log('Video is buffering...');
+});
+
+video.addEventListener('stalled', () => {
+    console.log('Video loading stalled');
+});
+
+video.addEventListener('suspend', () => {
+    console.log('Video loading suspended');
 });
 
 // Mouse move handler with throttling for better performance
@@ -447,12 +521,22 @@ console.log('Move your mouse to reveal the video');
 
 video.addEventListener('loadeddata', () => {
     console.log('Video loaded and ready');
+    console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+    console.log('Video duration:', video.duration);
     videoPlaying = true;
 });
 
-video.addEventListener('error', (e) => {
-    console.error('Video error:', e);
+video.addEventListener('loadstart', () => {
+    console.log('Video load started');
 });
+
+video.addEventListener('canplay', () => {
+    console.log('Video can play');
+});
+
+// Check video source
+console.log('Video source:', video.currentSrc || 'No source loaded');
+console.log('Video ready state:', video.readyState);
 
 // Touch support for mobile devices
 let touchActive = false;
