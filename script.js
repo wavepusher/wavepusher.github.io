@@ -34,14 +34,14 @@ const speedMultiplier = 2;
 const circles = [];
 
 // Current shape selection
-let currentShape = 'circle';
+let currentShape = 'star';
 
 // Volume control variables
 let isMuted = false;
 let previousVolume = 0.5;
 
 // Video mask toggle
-let showFullVideo = false;
+let showFullVideo = true;
 
 
 // Handle video autoplay with proper Promise handling
@@ -480,24 +480,27 @@ const videoToggleBtn = document.getElementById('videoToggleBtn');
 const defaultLogo = document.getElementById('defaultLogo');
 const altLogo = document.getElementById('altLogo');
 
+
 videoToggleBtn.addEventListener('click', () => {
     showFullVideo = !showFullVideo;
     
     // Update button appearance
     if (showFullVideo) {
-        videoToggleBtn.textContent = '🎭';
+        // Full video mode - show eye icon to enable mask
+        videoToggleBtn.textContent = '👁';
         videoToggleBtn.classList.add('active');
-        videoToggleBtn.title = 'Show Video Mask';
+        videoToggleBtn.title = 'Enable Mouse Mask Effect';
         
-        // Switch to alternate logo
+        // Show alternate logo when in full video mode
         defaultLogo.style.display = 'none';
         altLogo.style.display = 'block';
     } else {
-        videoToggleBtn.textContent = '👁';
+        // Mask mode - show mask icon to disable mask
+        videoToggleBtn.textContent = '🎭';
         videoToggleBtn.classList.remove('active');
-        videoToggleBtn.title = 'Show Full Video';
+        videoToggleBtn.title = 'Disable Mouse Mask Effect';
         
-        // Switch back to default logo
+        // Show default logo when in mask mode
         defaultLogo.style.display = 'block';
         altLogo.style.display = 'none';
     }
@@ -558,83 +561,26 @@ if (isMobile) {
     // Hide cursor dot on mobile
     cursorDot.style.display = 'none';
     
-    // Set default shape to heart for mobile
-    currentShape = 'heart';
+    // Show full video without mask on mobile
+    showFullVideo = true;
     
-    // Mobile reveal button
-    const mobileRevealBtn = document.getElementById('mobileRevealBtn');
-    if (mobileRevealBtn) {
-        mobileRevealBtn.addEventListener('click', () => {
-            // Instructions or haptic feedback could go here
-            console.log('Touch and drag anywhere to reveal the video!');
-        });
+    // Show logo-alt on mobile
+    const defaultLogo = document.getElementById('defaultLogo');
+    const altLogo = document.getElementById('altLogo');
+    if (defaultLogo && altLogo) {
+        defaultLogo.style.display = 'none';
+        altLogo.style.display = 'block';
     }
     
-    // Touch events
-    canvas.addEventListener('touchstart', (e) => {
-        touchActive = true;
-        const touch = e.touches[0];
-        mouseX = touch.clientX;
-        mouseY = touch.clientY;
-        lastMouseX = mouseX;
-        lastMouseY = mouseY;
-        
-        // Add initial circle on touch
-        circles.push({
-            x: mouseX,
-            y: mouseY,
-            radius: baseRadius,
-            opacity: 0.8,
-            shape: currentShape
-        });
-    }, { passive: true });
+    // No touch interaction needed on mobile since video is shown in full
+} else {
+    // Initialize video toggle button state for desktop
+    // Since showFullVideo defaults to true now, set initial button state
+    videoToggleBtn.textContent = '👁';
+    videoToggleBtn.classList.add('active');
+    videoToggleBtn.title = 'Enable Mouse Mask Effect';
     
-    canvas.addEventListener('touchmove', (e) => {
-        if (!touchActive) return;
-        
-        const touch = e.touches[0];
-        mouseX = touch.clientX;
-        mouseY = touch.clientY;
-        
-        // Calculate touch speed
-        const deltaX = mouseX - lastMouseX;
-        const deltaY = mouseY - lastMouseY;
-        mouseSpeed = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
-        // Calculate dynamic radius
-        const dynamicRadius = Math.min(baseRadius + (mouseSpeed * speedMultiplier), maxRadius);
-        
-        // Add trail circles
-        const now = performance.now();
-        if (now - lastTrailTime > trailInterval / 2) { // Faster trail for touch
-            circles.push({
-                x: mouseX,
-                y: mouseY,
-                radius: dynamicRadius,
-                opacity: 0.8,
-                shape: currentShape
-            });
-            
-            if (circles.length > 79) {
-                circles.shift();
-            }
-            
-            lastTrailTime = now;
-        }
-        
-        lastMouseX = mouseX;
-        lastMouseY = mouseY;
-    }, { passive: true });
-    
-    canvas.addEventListener('touchend', () => {
-        touchActive = false;
-        mouseSpeed = 0;
-    }, { passive: true });
-    
-    // Prevent scrolling when touching the canvas
-    document.body.addEventListener('touchmove', (e) => {
-        if (touchActive) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+    // Show alternate logo by default when video is in full view
+    defaultLogo.style.display = 'none';
+    altLogo.style.display = 'block';
 }
