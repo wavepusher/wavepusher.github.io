@@ -374,13 +374,15 @@ body {
         font-size: 14px;
     }
     
-    /* Show logo-alt instead of default logo on mobile */
+    /* Show default logo initially on mobile, JavaScript will handle switching */
     .logo {
-        display: none !important;
+        display: block !important;
+        max-width: 200px;
+        max-height: 200px;
     }
     
     .logo-alt {
-        display: block !important;
+        display: none !important;
         max-width: 200px;
         max-height: 200px;
     }
@@ -406,13 +408,15 @@ body {
         font-size: 12px;
     }
     
-    /* Show logo-alt on smaller mobile too */
+    /* Show default logo initially on smaller mobile too, JavaScript will handle switching */
     .logo {
-        display: none !important;
+        display: block !important;
+        max-width: 150px;
+        max-height: 150px;
     }
     
     .logo-alt {
-        display: block !important;
+        display: none !important;
         max-width: 150px;
         max-height: 150px;
     }

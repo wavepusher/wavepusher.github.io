@@ -564,12 +564,26 @@ if (isMobile) {
     // Show full video without mask on mobile
     showFullVideo = true;
     
-    // Show logo-alt on mobile
+    // Initially show logo.png on mobile until video starts playing
     const defaultLogo = document.getElementById('defaultLogo');
     const altLogo = document.getElementById('altLogo');
     if (defaultLogo && altLogo) {
-        defaultLogo.style.display = 'none';
-        altLogo.style.display = 'block';
+        defaultLogo.style.display = 'block';
+        altLogo.style.display = 'none';
+        
+        // Function to switch logos when video starts playing
+        const switchToAltLogo = () => {
+            defaultLogo.style.display = 'none';
+            altLogo.style.display = 'block';
+        };
+        
+        // Listen for video playing event
+        video.addEventListener('playing', switchToAltLogo, { once: true });
+        
+        // Also check if video is already playing when the script loads
+        if (video.readyState >= 3 && !video.paused) {
+            switchToAltLogo();
+        }
     }
     
     // No touch interaction needed on mobile since video is shown in full
