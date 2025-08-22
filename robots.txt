@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://birdsongentertainment.com/sitemap.xml
+
+# Optimize crawl budget
+Crawl-delay: 1
+
+# Block access to temporary files
+Disallow: /temp/
+Disallow: *.bak
+Disallow: *.tmp
