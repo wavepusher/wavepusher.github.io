@@ -1,247 +1,692 @@
 <!DOCTYPE html>
-<html lang="en-CA">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birdsong Entertainment - Premier Mobile DJ Service in Ottawa | Corporate Events & Private Parties</title>
-    <meta name="description" content="Ottawa's trusted mobile DJ service for weddings, corporate events, and private parties. Serving Ottawa-Gatineau with professional entertainment since [year]. Book your event today!">
-    <meta name="keywords" content="Ottawa DJ, mobile DJ Ottawa, wedding DJ Ottawa, corporate event DJ, Ottawa-Gatineau DJ, private party DJ, Birdsong Entertainment, Ottawa entertainment services">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://birdsongentertainment.com/">
-    <meta property="og:title" content="Birdsong Entertainment - Ottawa's Premier Mobile DJ Service">
-    <meta property="og:description" content="Professional mobile DJ service for all events in Ottawa-Gatineau. Weddings, corporate events, private parties. Book now!">
-    <meta property="og:image" content="https://birdsongentertainment.com/og-image.jpg">
-    <meta property="og:locale" content="en_CA">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://birdsongentertainment.com/">
-    <meta property="twitter:title" content="Birdsong Entertainment - Ottawa's Premier Mobile DJ Service">
-    <meta property="twitter:description" content="Professional mobile DJ service for all events in Ottawa-Gatineau. Weddings, corporate events, private parties.">
-    <meta property="twitter:image" content="https://birdsongentertainment.com/twitter-image.jpg">
-    
-    <!-- Local Business Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "Birdsong Entertainment",
-      "description": "Professional mobile DJ service in Ottawa-Gatineau for weddings, corporate events, and private parties",
-      "@id": "https://birdsongentertainment.com",
-      "url": "https://birdsongentertainment.com",
-      "telephone": "+1-613-XXX-XXXX",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Ottawa",
-        "addressRegion": "ON",
-        "addressCountry": "CA"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 45.4215,
-        "longitude": -75.6972
-      },
-      "areaServed": [
-        {
-          "@type": "City",
-          "name": "Ottawa"
-        },
-        {
-          "@type": "City",
-          "name": "Gatineau"
-        },
-        {
-          "@type": "State",
-          "name": "National Capital Region"
-        }
-      ],
-      "priceRange": "$$",
-      "openingHoursSpecification": {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday"
-        ],
-        "opens": "00:00",
-        "closes": "23:59"
-      },
-      "sameAs": [
-        "https://www.facebook.com/birdsongentertainment",
-        "https://www.instagram.com/birdsongentertainment"
-      ]
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birdsong Entertainment — Ottawa's Premier DJ Service</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink: #C9278E;
+    --pink-light: #e054aa;
+    --pink-glow: rgba(201,39,142,0.15);
+    --black: #0a0a0a;
+    --off-black: #111111;
+    --dark: #160f12;
+    --mid: #1e1318;
+    --text: #f0ede6;
+    --muted: #9a8a90;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 3rem;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.97) 0%, transparent 100%);
+    transition: background 0.3s;
+  }
+  nav.scrolled {
+    background: rgba(10,10,10,0.97);
+    border-bottom: 1px solid rgba(201,39,142,0.18);
+  }
+  .hamburger { display: none; }
+  .nav-logo img { height: 30px; width: auto; display: block; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--pink-light); }
+  .nav-links a.nav-cta {
+    color: #fff; background: var(--pink);
+    padding: 0.45rem 1.1rem; letter-spacing: 0.1em;
+    transition: background 0.2s;
+  }
+  .nav-links a.nav-cta:hover { background: var(--pink-light); color: #fff; }
+  #photo-band { display: none; }
+  .photo-band-img { display: none; }
+
+  #experience {
+    position: relative;
+    border-top: 1px solid rgba(201,39,142,0.1);
+    border-bottom: 1px solid rgba(201,39,142,0.1);
+  }
+  #experience .section-bg {
+    position: absolute; inset: 0;
+    background-image: url('DSC_4096.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.28;
+    z-index: 0;
+  }
+  #experience .section-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(22,15,18,0.92) 0%, rgba(22,15,18,0.55) 50%, rgba(22,15,18,0.88) 100%);
+  }
+  #experience .container { position: relative; z-index: 1; }
+
+  /* AREAS — sparklers photo as bg */
+  #areas {
+    position: relative;
+  }
+  #areas .section-bg {
+    position: absolute; inset: 0;
+    background-image: url('Still_2026-01-17_065455_1_21_1.png');
+    background-size: cover;
+    background-position: center top;
+    opacity: 0.1;
+    z-index: 0;
+  }
+  #areas .section-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.82) 50%, rgba(10,10,10,0.97) 100%);
+  }
+  #areas .container { position: relative; z-index: 1; }
+  .about-photo-col { position: relative; }
+  .about-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; filter: brightness(0.8) saturate(1.05); }
+  .about-photo-caption { display: block; padding: 0.6rem 0; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(240,237,230,0.4); }
+  .gear-photo-wrap { position: relative; margin-bottom: 2rem; overflow: hidden; }
+  .gear-photo { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; filter: brightness(0.72) saturate(1.1); transition: filter 0.4s; }
+  .gear-photo:hover { filter: brightness(0.88) saturate(1.2); }
+  .gear-photo-label { position: absolute; bottom: 0.9rem; left: 1rem; font-size: 0.63rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(201,39,142,0.9); }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    position: relative; padding: 6rem 2rem 5rem; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: var(--black);
+  }
+  .hero-video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.38;
+    z-index: 0;
+  }
+  .hero-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 65%, var(--pink-glow) 0%, transparent 70%),
+      linear-gradient(to bottom, rgba(10,10,10,0.45) 0%, rgba(10,10,10,0.25) 50%, rgba(10,10,10,0.7) 100%);
+  }
+  .hero-rings {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(201,39,142,0.1);
+    animation: pulse-ring 7s ease-in-out infinite;
+  }
+  .ring:nth-child(1) { width: 380px; height: 380px; animation-delay: 0s; }
+  .ring:nth-child(2) { width: 630px; height: 630px; animation-delay: 2s; border-color: rgba(201,39,142,0.06); }
+  .ring:nth-child(3) { width: 900px; height: 900px; animation-delay: 4s; border-color: rgba(201,39,142,0.03); }
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.03); }
+  }
+  .hero-content { position: relative; z-index: 2; }
+  .hero-logo-main {
+    width: 230px; height: auto;
+    margin: 0 auto 2.25rem;
+    opacity: 0;
+    animation: fade-up 0.9s ease forwards 0.15s;
+    filter: drop-shadow(0 0 45px rgba(201,39,142,0.4));
+  }
+  .hero-eyebrow {
+    font-size: 0.67rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--pink-light); margin-bottom: 1.1rem;
+    opacity: 0; animation: fade-up 0.8s ease forwards 0.4s;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(2.8rem, 7.5vw, 6.5rem);
+    line-height: 1.05; font-weight: 400; color: var(--text); margin-bottom: 1.4rem;
+    opacity: 0; animation: fade-up 0.8s ease forwards 0.6s;
+  }
+  .hero-title em { font-style: italic; color: var(--pink-light); }
+  .hero-subtitle {
+    font-size: clamp(0.88rem, 2vw, 1.05rem); color: var(--muted);
+    max-width: 450px; margin: 0 auto 2.5rem; font-weight: 300;
+    opacity: 0; animation: fade-up 0.8s ease forwards 0.8s;
+  }
+  .hero-cta {
+    display: inline-flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    opacity: 0; animation: fade-up 0.8s ease forwards 1s;
+  }
+  .btn-primary {
+    background: var(--pink); color: #fff;
+    padding: 0.8rem 2rem; font-family: var(--sans);
+    font-size: 0.76rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: var(--pink-light); transform: translateY(-1px); }
+  .btn-outline {
+    border: 1px solid rgba(201,39,142,0.45); color: var(--pink-light);
+    padding: 0.8rem 2rem; font-family: var(--sans);
+    font-size: 0.76rem; letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--pink-light); color: #fff; }
+  .hero-scroll {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    color: var(--muted); font-size: 0.61rem; letter-spacing: 0.15em; text-transform: uppercase;
+    opacity: 0; animation: fade-up 1s ease forwards 1.5s;
+  }
+  .scroll-line {
+    width: 1px; height: 38px;
+    background: linear-gradient(to bottom, var(--pink), transparent);
+    animation: scroll-pulse 2s ease-in-out infinite;
+  }
+  @keyframes scroll-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* COMMONS */
+  section { padding: 7rem 2rem; position: relative; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.63rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--pink-light); margin-bottom: 0.6rem;
+  }
+  .section-title {
+    font-family: var(--serif); font-size: clamp(1.9rem, 4vw, 3rem);
+    font-weight: 400; line-height: 1.15; margin-bottom: 1.2rem;
+  }
+  .section-title em { font-style: italic; color: var(--pink-light); }
+  .divider { width: 52px; height: 1px; background: var(--pink); margin-bottom: 2.5rem; opacity: 0.5; }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ABOUT */
+  #about {
+    background: var(--off-black);
+    border-top: 1px solid rgba(201,39,142,0.12);
+    border-bottom: 1px solid rgba(201,39,142,0.12);
+  }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+  .about-text p { color: var(--muted); margin-bottom: 1rem; font-size: 1rem; }
+  .about-text strong { color: var(--text); font-weight: 400; }
+  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .stat { border-left: 2px solid var(--pink); padding-left: 1.25rem; }
+  .stat-number { font-family: var(--serif); font-size: 2.4rem; color: var(--pink-light); line-height: 1; margin-bottom: 0.25rem; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* SERVICES */
+  #services { background: var(--black); }
+  .services-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 1.5px; border: 1px solid rgba(201,39,142,0.12); margin-top: 1rem;
+  }
+  .service-card {
+    padding: 2.5rem; background: var(--off-black);
+    transition: background 0.25s; position: relative; overflow: hidden;
+  }
+  .service-card::before {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    width: 100%; height: 2px; background: var(--pink);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease;
+  }
+  .service-card:hover { background: #160f13; }
+  .service-card:hover::before { transform: scaleX(1); }
+  .service-icon { font-size: 1.4rem; margin-bottom: 1.1rem; display: block; color: var(--pink); }
+  .service-name { font-family: var(--serif); font-size: 1.2rem; font-weight: 400; margin-bottom: 0.6rem; color: var(--text); }
+  .service-desc { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+
+  /* TICKER */
+  #music-ticker { background: var(--pink); padding: 0.9rem 0; overflow: hidden; white-space: nowrap; }
+  .ticker-track { display: inline-block; animation: ticker 28s linear infinite; }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .ticker-item { display: inline-block; font-size: 0.67rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; margin: 0 2rem; }
+  .ticker-dot { display: inline-block; width: 3px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 50%; margin: 0 2rem; vertical-align: middle; }
+
+  /* EXPERIENCE layout */
+  .experience-layout { display: grid; grid-template-columns: 1fr 1.15fr; gap: 5rem; align-items: start; }
+  .feature-list { list-style: none; }
+  .feature-item { display: flex; gap: 1.25rem; padding: 1.2rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .feature-item:last-child { border-bottom: none; }
+  .feature-icon { color: var(--pink); font-size: 0.8rem; flex-shrink: 0; margin-top: 0.25rem; }
+  .feature-text h4 { font-weight: 400; font-size: 0.95rem; color: var(--text); margin-bottom: 0.2rem; }
+  .feature-text p { font-size: 0.84rem; color: var(--muted); }
+  .quote-block {
+    background: var(--mid); padding: 2.5rem;
+    border-left: 3px solid var(--pink); position: relative; margin-bottom: 2px;
+  }
+  .quote-mark {
+    font-family: var(--serif); font-size: 5rem; color: var(--pink); opacity: 0.2;
+    position: absolute; top: 0.5rem; left: 1.5rem; line-height: 1;
+  }
+  .quote-text {
+    font-family: var(--serif); font-size: 1.15rem; font-style: italic;
+    line-height: 1.6; color: var(--text); margin-bottom: 1.2rem; position: relative; z-index: 1;
+  }
+  .quote-author { font-size: 0.76rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .quote-author span { color: var(--pink-light); }
+
+  /* AREAS layout */
+  .areas-intro { max-width: 520px; margin-bottom: 3rem; }
+  .areas-intro p { color: var(--muted); }
+  .areas-grid { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+  .area-pill {
+    padding: 0.45rem 1.1rem; border: 1px solid rgba(201,39,142,0.22);
+    font-size: 0.8rem; color: var(--muted); letter-spacing: 0.06em;
+    transition: border-color 0.2s, color 0.2s; cursor: default;
+  }
+  .area-pill:hover { border-color: var(--pink); color: var(--pink-light); }
+
+  /* CONTACT */
+  #contact { background: var(--off-black); border-top: 1px solid rgba(201,39,142,0.12); }
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; }
+  .contact-info p { color: var(--muted); margin-bottom: 2rem; font-size: 1rem; }
+  .contact-solo {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .contact-solo .section-label,
+  .contact-solo .section-title,
+  .contact-solo .divider { text-align: left; }
+  .contact-solo .divider { margin-left: auto; margin-right: auto; }
+  .contact-solo p { color: var(--muted); margin-bottom: 2.5rem; font-size: 1rem; }
+  .contact-cta-wrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+  .btn-contact-large {
+    display: inline-block;
+    background: var(--pink); color: #fff;
+    padding: 1rem 3rem;
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-contact-large:hover { background: var(--pink-light); transform: translateY(-2px); }
+  .contact-note { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.06em; }
+  .contact-details { list-style: none; }
+  .contact-details li {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.88rem; color: var(--muted);
+  }
+  .contact-details li:last-child { border-bottom: none; }
+  .contact-details a { color: var(--pink-light); text-decoration: none; }
+  .contact-details a:hover { text-decoration: underline; }
+  .contact-icon { color: var(--pink); font-size: 0.85rem; }
+  .bilingual-badge {
+    display: inline-block; border: 1px solid rgba(201,39,142,0.35);
+    padding: 0.3rem 0.85rem; font-size: 0.63rem;
+    color: var(--pink-light); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1.5rem;
+  }
+  .form-group { margin-bottom: 1.4rem; }
+  .form-group label {
+    display: block; font-size: 0.67rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.45rem;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%; background: var(--dark); border: 1px solid rgba(201,39,142,0.15);
+    color: var(--text); padding: 0.8rem 1rem; font-family: var(--sans);
+    font-size: 0.88rem; font-weight: 300; outline: none;
+    transition: border-color 0.2s; -webkit-appearance: none; appearance: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--pink); }
+  .form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath fill='%23C9278E' d='M5 7L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 1rem center; cursor: pointer;
+  }
+  .form-group textarea { resize: vertical; min-height: 120px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .submit-btn {
+    background: var(--pink); color: #fff; border: none;
+    padding: 0.9rem 2.4rem; font-family: var(--sans);
+    font-size: 0.76rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, transform 0.15s;
+  }
+  .submit-btn:hover { background: var(--pink-light); transform: translateY(-1px); }
+
+  /* FOOTER */
+  footer {
+    background: var(--black); border-top: 1px solid rgba(201,39,142,0.1);
+    padding: 3rem 2rem 2rem; text-align: center;
+  }
+  .footer-logo-img { height: 90px; width: auto; margin: 0 auto 1rem; display: block; opacity: 0.9; }
+  footer p { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.3rem; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    /* NAV — hamburger */
+    nav { padding: 0.9rem 1.25rem; }
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex; flex-direction: column; gap: 0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10,10,10,0.98);
+      justify-content: center; align-items: center;
+      z-index: 99;
     }
-    </script>
-    
-    <!-- Event Service Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Service",
-      "serviceType": "Mobile DJ Service",
-      "provider": {
-        "@type": "LocalBusiness",
-        "name": "Birdsong Entertainment"
-      },
-      "areaServed": {
-        "@type": "GeoCircle",
-        "geoMidpoint": {
-          "@type": "GeoCoordinates",
-          "latitude": 45.4215,
-          "longitude": -75.6972
-        },
-        "geoRadius": "50km"
-      },
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "DJ Services",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Wedding DJ Services"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Corporate Event DJ Services"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Private Party DJ Services"
-            }
-          }
-        ]
-      }
+    .nav-links.open li { width: 100%; text-align: center; }
+    .nav-links.open a {
+      display: block; padding: 1.1rem 2rem;
+      font-size: 1rem; letter-spacing: 0.15em;
+      border-bottom: 1px solid rgba(201,39,142,0.1);
     }
-    </script>
-    
-    <link rel="canonical" href="https://birdsongentertainment.com/">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- Preconnect to improve performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    .nav-links.open a.nav-cta {
+      margin: 1.5rem auto 0; display: inline-block;
+      width: auto; padding: 0.75rem 2rem;
+    }
+    .hamburger {
+      display: flex; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; z-index: 101;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px;
+      background: var(--text); border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* HERO */
+    #hero { padding: 5rem 1.25rem 4rem; }
+    .hero-logo-main { width: 150px; }
+    .ring:nth-child(2), .ring:nth-child(3) { display: none; }
+
+    /* SECTIONS */
+    section { padding: 4rem 1.25rem; }
+
+    /* ABOUT */
+    .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .about-stats { grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .stat-number { font-size: 2rem; }
+
+    /* SERVICES */
+    .services-grid { grid-template-columns: 1fr; }
+
+    /* EXPERIENCE */
+    .experience-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+    .gear-photo-wrap { margin-bottom: 1.5rem; }
+
+    /* AREAS */
+    .areas-grid { gap: 0.5rem; }
+    .area-pill { font-size: 0.75rem; padding: 0.4rem 0.9rem; }
+
+    /* VIDEO */
+    #video { padding: 4rem 1.25rem; }
+
+    /* CONTACT */
+    .contact-solo { text-align: left; }
+    .contact-cta-wrap { align-items: flex-start; }
+    .btn-contact-large { width: 100%; text-align: center; }
+
+    /* FOOTER */
+    footer { padding: 2.5rem 1.25rem 1.5rem; }
+    .footer-logo-img { height: 70px; }
+  }
+
+  @media (max-width: 480px) {
+    .hero-title { font-size: 2.4rem; }
+    .section-title { font-size: 1.75rem; }
+    .about-stats { grid-template-columns: 1fr 1fr; }
+    .stat-number { font-size: 1.8rem; }
+    .services-grid { border: none; gap: 1px; }
+    .quote-block { padding: 1.75rem; }
+  }
+</style>
 </head>
 <body>
-    <!-- SEO Content Section (Hidden but crawlable) -->
-    <div style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;">
-        <h1>Birdsong Entertainment - Ottawa's Premier Mobile DJ Service</h1>
-        <h2>Professional DJ Services for Ottawa-Gatineau Events</h2>
-        <p>Welcome to Birdsong Entertainment, your trusted mobile DJ service in Ottawa and the National Capital Region. We specialize in providing exceptional entertainment for weddings, corporate events, private parties, and celebrations of all sizes throughout Ottawa-Gatineau.</p>
-        <h3>Our DJ Services Include:</h3>
-        <ul>
-            <li>Wedding DJ Services in Ottawa</li>
-            <li>Corporate Event Entertainment</li>
-            <li>Private Party DJ Services</li>
-            <li>Birthday Party Entertainment</li>
-            <li>Holiday Party DJ</li>
-            <li>Graduation Celebrations</li>
-            <li>Anniversary Parties</li>
-            <li>Fundraising Events</li>
-        </ul>
-        <h3>Serving the Greater Ottawa-Gatineau Area</h3>
-        <p>We proudly serve Ottawa, Gatineau, Kanata, Orleans, Barrhaven, Nepean, Gloucester, Aylmer, Hull, and surrounding communities in Eastern Ontario and Western Quebec.</p>
-        <h3>Why Choose Birdsong Entertainment?</h3>
-        <ul>
-            <li>Professional, experienced DJs</li>
-            <li>State-of-the-art sound equipment</li>
-            <li>Extensive music library spanning all genres</li>
-            <li>Customizable playlists for your event</li>
-            <li>Professional lighting options</li>
-            <li>Bilingual services (English/French)</li>
-            <li>Competitive pricing</li>
-            <li>Reliable and punctual service</li>
-        </ul>
-        <p>Contact us today to book Ottawa's most trusted mobile DJ service for your next event!</p>
-    </div>
-    
-    <!-- Header -->
-    <header class="main-header" role="banner">
-        <div class="header-content">
-            <div class="header-logo">
-                <img src="header-logo.png" alt="Birdsong Entertainment - Ottawa Mobile DJ Service" class="header-logo-img" width="200" height="60" loading="eager">
-            </div>
-            <nav class="header-nav" role="navigation" aria-label="Main navigation">
-                <button class="nav-btn" id="clientsBtn">Clients</button>
-                <button class="nav-btn" id="contactBtn">Contact</button>
-            </nav>
-        </div>
-    </header>
 
-    <!-- Hidden video element -->
-    <video id="backgroundVideo" autoplay muted loop playsinline style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px;" preload="auto" aria-hidden="true">
-        <source src="video.mp4" type="video/mp4">
-        Your browser does not support the video tag.
+<!-- NAV -->
+<nav id="main-nav">
+  <a href="#hero" class="nav-logo">
+    <img src="birdsong_typo-_for_black_background.png" alt="Birdsong Entertainment">
+  </a>
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="https://birdsong.djintelligence.com/event" target="_blank">Client Area</a></li>
+    <li><a href="https://birdsong.djintelligence.com/contact" target="_blank" class="nav-cta">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg">
+    <video class="hero-video" autoplay muted loop playsinline preload="auto">
+      <source src="background-video.mp4" type="video/mp4">
     </video>
-
-    <!-- Canvas for rendering -->
-    <canvas id="mainCanvas"></canvas>
-
-    <!-- Logo -->
-    <img src="logo.png" alt="Birdsong Entertainment - Professional DJ Services in Ottawa-Gatineau" class="logo" id="defaultLogo" width="300" height="300" loading="lazy">
-    <img src="logo-alt.png" alt="Birdsong Entertainment Mobile DJ Ottawa" class="logo logo-alt" id="altLogo" width="300" height="300" loading="lazy">
-
-    <!-- Audio element -->
-    <audio id="backgroundMusic" loop>
-        <source src="music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
-    <!-- Unified Control Panel -->
-    <div class="control-panel" id="controlPanel">
-        <div class="controls-content" id="panelContent">
-            <!-- Audio Controls -->
-            <div class="control-section audio-controls">
-                <button id="panelMinimizeBtn" class="control-btn" title="Settings">⚙</button>
-                <button id="playPauseBtn" class="control-btn" title="Play/Pause">▶️</button>
-                <button id="muteBtn" class="control-btn" title="Mute/Unmute">🔊</button>
-                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="50" title="Volume">
-            </div>
-            
-            <!-- Divider -->
-            <div class="control-divider"></div>
-            
-            <!-- Video Toggle -->
-            <div class="control-section video-controls">
-                <button id="videoToggleBtn" class="control-btn" title="Toggle Video Mask">👁</button>
-            </div>
-            
-            <!-- Divider -->
-            <div class="control-divider"></div>
-            
-            <!-- Shape Controls (Desktop Only) -->
-            <div class="control-section shape-controls desktop-only">
-                <button class="shape-btn" data-shape="circle" title="Circle">○</button>
-                <button class="shape-btn" data-shape="square" title="Square">□</button>
-                <button class="shape-btn" data-shape="triangle" title="Triangle">△</button>
-                <button class="shape-btn active" data-shape="star" title="Star">☆</button>
-                <button class="shape-btn" data-shape="heart" title="Heart">♡</button>
-            </div>
-            
-            <!-- Mobile Controls -->
-            <div class="control-section mobile-controls mobile-only">
-                <button id="mobileRevealBtn" class="control-btn mobile-reveal-btn" title="Touch to Reveal">👆 Touch & Drag</button>
-            </div>
-        </div>
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+  <div class="hero-content">
+    <img src="logo_birdsong-_for_black_background.png" alt="Birdsong Entertainment" class="hero-logo-main">
+    <p class="hero-eyebrow">Ottawa · Gatineau · National Capital Region</p>
+    <h1 class="hero-title">The sound of<br><em>extraordinary</em><br>events.</h1>
+    <p class="hero-subtitle">Professional mobile DJ services for weddings, corporate events, and private celebrations across Ottawa-Gatineau.</p>
+    <div class="hero-cta">
+      <a href="https://birdsong.djintelligence.com/contact" target="_blank" class="btn-primary">Book Your Event</a>
+      <a href="#services" class="btn-outline">Our Services</a>
     </div>
-    
-    <!-- Floating Settings Button (shows when panel is minimized) -->
-    <button id="floatingSettingsBtn" class="floating-settings-btn" title="Show Controls" style="display: none;">⚙</button>
+  </div>
+  <div class="hero-scroll"><div class="scroll-line"></div><span>Scroll</span></div>
+</section>
 
-    <script src="script.js"></script>
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p class="section-label">About Us</p>
+        <h2 class="section-title">Music that <em>moves</em> people.</h2>
+        <div class="divider"></div>
+        <p>Birdsong Entertainment has been Ottawa's trusted name in mobile DJ entertainment, crafting the soundtrack for moments that matter — from intimate gatherings to grand celebrations.</p>
+        <p>We bring <strong>state-of-the-art sound equipment</strong>, an extensive music library spanning every genre and era, and the experience to read a room and keep the energy exactly where it needs to be.</p>
+      </div>
+      <div class="about-photo-col reveal reveal-delay-2">
+        <img src="Still_2026-01-17_065455_1_21_1.png" alt="Wedding celebration with sparklers" class="about-photo">
+        <div class="about-photo-caption">Weddings · Corporate · Private Events</div>
+        <div class="about-stats" style="margin-top: 2rem;">
+          <div class="stat reveal reveal-delay-1"><div class="stat-number">500+</div><div class="stat-label">Events Performed</div></div>
+          <div class="stat reveal reveal-delay-2"><div class="stat-number">15+</div><div class="stat-label">Years of Experience</div></div>
+          <div class="stat reveal reveal-delay-3"><div class="stat-number">5★</div><div class="stat-label">Client Rating</div></div>
+          <div class="stat reveal reveal-delay-4"><div class="stat-number">100%</div><div class="stat-label">Client Satisfaction</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">What We Do</p>
+      <h2 class="section-title">Every occasion,<br><em>perfectly scored.</em></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal"><span class="service-icon">♡</span><h3 class="service-name">Weddings</h3><p class="service-desc">From the first dance to the last song of the night, we create the musical journey that makes your wedding unforgettable. Custom playlists, ceremony music, and seamless transitions.</p></div>
+      <div class="service-card reveal reveal-delay-1"><span class="service-icon">◈</span><h3 class="service-name">Corporate Events</h3><p class="service-desc">Award galas, holiday parties, product launches, and team celebrations. We bring the right atmosphere for your brand and your team.</p></div>
+      <div class="service-card reveal reveal-delay-2"><span class="service-icon">★</span><h3 class="service-name">Private Parties</h3><p class="service-desc">Birthdays, anniversaries, graduations — every milestone deserves great music. We tailor every set to your crowd and your vibe.</p></div>
+      <div class="service-card reveal reveal-delay-3"><span class="service-icon">◉</span><h3 class="service-name">Fundraising Events</h3><p class="service-desc">Help your cause shine. We work with non-profits and community organizations to create energetic, memorable fundraising experiences.</p></div>
+      <div class="service-card reveal"><span class="service-icon">⊕</span><h3 class="service-name">Holiday Parties</h3><p class="service-desc">Ring in the season with flair. We have the festive music and professional touch to make your holiday celebration truly special.</p></div>
+      <div class="service-card reveal reveal-delay-1"><span class="service-icon">◎</span><h3 class="service-name">Custom Events</h3><p class="service-desc">Have something unique in mind? We adapt to your vision. Get in touch and let's design the perfect entertainment package together.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div id="music-ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span class="ticker-item">Top 40</span><span class="ticker-dot"></span><span class="ticker-item">Hip-Hop</span><span class="ticker-dot"></span><span class="ticker-item">R&amp;B</span><span class="ticker-dot"></span><span class="ticker-item">Classic Rock</span><span class="ticker-dot"></span><span class="ticker-item">Country</span><span class="ticker-dot"></span><span class="ticker-item">Electronic</span><span class="ticker-dot"></span><span class="ticker-item">Latin</span><span class="ticker-dot"></span><span class="ticker-item">Jazz</span><span class="ticker-dot"></span><span class="ticker-item">Oldies</span><span class="ticker-dot"></span><span class="ticker-item">Dancehall</span><span class="ticker-dot"></span><span class="ticker-item">Soul &amp; Funk</span><span class="ticker-dot"></span><span class="ticker-item">80s &amp; 90s</span><span class="ticker-dot"></span><span class="ticker-item">Top 40</span><span class="ticker-dot"></span><span class="ticker-item">Hip-Hop</span><span class="ticker-dot"></span><span class="ticker-item">R&amp;B</span><span class="ticker-dot"></span><span class="ticker-item">Classic Rock</span><span class="ticker-dot"></span><span class="ticker-item">Country</span><span class="ticker-dot"></span><span class="ticker-item">Electronic</span><span class="ticker-dot"></span><span class="ticker-item">Latin</span><span class="ticker-dot"></span><span class="ticker-item">Jazz</span><span class="ticker-dot"></span><span class="ticker-item">Oldies</span><span class="ticker-dot"></span><span class="ticker-item">Dancehall</span><span class="ticker-dot"></span><span class="ticker-item">Soul &amp; Funk</span><span class="ticker-dot"></span><span class="ticker-item">80s &amp; 90s</span>
+  </div>
+</div>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="experience-layout">
+      <div>
+        <div class="reveal">
+          <p class="section-label">The Difference</p>
+          <h2 class="section-title">What sets us<br><em>apart.</em></h2>
+          <div class="divider"></div>
+        </div>
+        <ul class="feature-list">
+          <li class="feature-item reveal"><span class="feature-icon">◆</span><div class="feature-text"><h4>Professional-Grade Equipment</h4><p>State-of-the-art sound systems and professional lighting rigs for venues of any size.</p></div></li>
+          <li class="feature-item reveal reveal-delay-1"><span class="feature-icon">◆</span><div class="feature-text"><h4>Customizable Playlists</h4><p>We work with you before the event to curate a soundtrack that reflects your taste and your guests.</p></div></li>
+          <li class="feature-item reveal reveal-delay-2"><span class="feature-icon">◆</span><div class="feature-text"><h4>Reliable &amp; Punctual</h4><p>We arrive early, set up professionally, and ensure everything is ready before your guests arrive.</p></div></li>
+          <li class="feature-item reveal reveal-delay-3"><span class="feature-icon">◆</span><div class="feature-text"><h4>All Genres, All Eras</h4><p>From current chart-toppers to classic hits — an extensive library spanning every era and genre.</p></div></li>
+        </ul>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="gear-photo-wrap">
+          <img src="DSC_4023.jpg" alt="Birdsong Entertainment DJ setup" class="gear-photo">
+          <span class="gear-photo-label">Professional setup · Ottawa</span>
+        </div>
+        <div class="quote-block">
+          <div class="quote-mark">"</div>
+          <p class="quote-text">Birdsong Entertainment kept our wedding reception alive from the first song to the last. Every guest was on the dance floor. We couldn't have asked for a better night.</p>
+          <p class="quote-author">— Sarah &amp; Marc T., <span>Wedding Reception, Ottawa</span></p>
+        </div>
+        <div class="quote-block">
+          <div class="quote-mark">"</div>
+          <p class="quote-text">Absolutely professional from start to finish. They read the room perfectly and our team was talking about the party for weeks after.</p>
+          <p class="quote-author">— Jennifer L., <span>Corporate Holiday Gala</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AREAS -->
+<section id="areas">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="areas-intro reveal">
+      <p class="section-label">Service Area</p>
+      <h2 class="section-title">Serving the<br><em>Capital Region.</em></h2>
+      <div class="divider"></div>
+      <p>We proudly serve communities across Ottawa, Gatineau, and the broader National Capital Region in both Ontario and Quebec.</p>
+    </div>
+    <div class="areas-grid">
+      <div class="area-pill reveal">Ottawa</div><div class="area-pill reveal reveal-delay-1">Gatineau</div><div class="area-pill reveal reveal-delay-2">Kanata</div><div class="area-pill reveal reveal-delay-3">Orléans</div><div class="area-pill reveal">Barrhaven</div><div class="area-pill reveal reveal-delay-1">Nepean</div><div class="area-pill reveal reveal-delay-2">Gloucester</div><div class="area-pill reveal reveal-delay-3">Aylmer</div><div class="area-pill reveal">Hull</div><div class="area-pill reveal reveal-delay-1">Stittsville</div><div class="area-pill reveal reveal-delay-2">Manotick</div><div class="area-pill reveal reveal-delay-3">Richmond</div><div class="area-pill reveal">Embrun</div><div class="area-pill reveal reveal-delay-1">Rockland</div><div class="area-pill reveal reveal-delay-2">Carleton Place</div><div class="area-pill reveal reveal-delay-3">&amp; surrounding areas</div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section id="video" style="background: var(--off-black); border-top: 1px solid rgba(201,39,142,0.12); border-bottom: 1px solid rgba(201,39,142,0.12); padding: 6rem 2rem;">
+  <div class="container">
+    <div class="reveal" style="text-align: center; margin-bottom: 3rem;">
+      <p class="section-label">See It In Action</p>
+      <h2 class="section-title">Feel the <em>energy.</em></h2>
+      <div class="divider" style="margin: 0 auto 0;"></div>
+    </div>
+    <div class="reveal reveal-delay-1" style="position: relative; width: 100%; max-width: 860px; margin: 0 auto; aspect-ratio: 16/9;">
+      <iframe
+        src="https://www.youtube.com/embed/nE2Li1fe6Ng?rel=0&modestbranding=1&color=white"
+        title="Birdsong Entertainment — Event Highlight"
+        style="position: absolute; inset: 0; width: 100%; height: 100%; border: none; outline: none;"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-solo reveal">
+      <p class="section-label">Get In Touch</p>
+      <h2 class="section-title">Let's make your<br>event <em>legendary.</em></h2>
+      <div class="divider" style="margin-left:0;"></div>
+      <p>Ready to book or have a question? Fill out our contact form and we'll get back to you shortly. We serve Ottawa, Gatineau, and the surrounding National Capital Region.</p>
+      <div class="contact-cta-wrap">
+        <a href="https://birdsong.djintelligence.com/contact" target="_blank" class="btn-contact-large">Contact Us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <img src="logo_birdsong-_for_black_background.png" alt="Birdsong Entertainment" class="footer-logo-img">
+  <p>Ottawa's Premier Mobile DJ Service · National Capital Region</p>
+  <p>© 2025 Birdsong Entertainment. All rights reserved.</p>
+</footer>
+
+<script>
+  const nav = document.getElementById('main-nav');
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('nav-links');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+    document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
+  });
+
+  // Close menu when a link is clicked
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      hamburger.classList.remove('open');
+      navLinks.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 60); });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.submit-btn');
+    btn.textContent = 'Message Sent ✓';
+    btn.style.background = '#2d7a50';
+    btn.disabled = true;
+  }
+</script>
 </body>
 </html>
