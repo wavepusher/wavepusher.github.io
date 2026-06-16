@@ -1,0 +1,3839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wavepusher — Build your city, shape the wave.</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --panel:#c8b48a;
+  --panel-dark:#a89472;
+  --panel-darker:#7a6040;
+  --ink:#2a1f12;
+  --ink-light:#5a4530;
+  --accent:#c84a1a;
+  --accent-y:#e8b830;
+  --left-w:160px;
+  --top-h:36px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#2a1f12;color:var(--ink);font-family:'VT323',monospace;overflow:hidden;user-select:none;}
+
+/* ── TITLE SCREEN ── */
+#title-screen{
+  position:fixed;inset:0;z-index:200;
+  background:linear-gradient(180deg,#0d1a2e 0%,#1a3a6a 42%,#3a78b8 58%,#6ba84a 58%,#4a7a3a 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#title-screen h1{
+  font-family:'Press Start 2P',monospace;font-size:clamp(24px,4.5vw,52px);
+  color:#fff;text-shadow:4px 4px 0 #c84a1a,8px 8px 0 #2a1f12;
+  letter-spacing:4px;text-align:center;line-height:1.5;margin-bottom:6px;
+}
+#title-screen .tagline{
+  font-family:'VT323',monospace;font-size:22px;color:#ffe8b8;
+  letter-spacing:2px;margin-bottom:28px;text-shadow:1px 1px 0 #2a1f12;
+}
+.title-btn{
+  display:block;width:300px;margin:5px auto;
+  background:var(--panel);border:3px solid var(--ink);color:var(--ink);
+  font-family:'Press Start 2P',monospace;font-size:10px;
+  padding:13px 18px;cursor:pointer;letter-spacing:1px;
+  box-shadow:4px 4px 0 var(--ink);text-align:center;
+}
+.title-btn:hover{background:#e8d4aa;transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);}
+.title-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink);}
+.title-sun{width:72px;height:72px;border-radius:50%;
+  background:radial-gradient(#ffe870,#f0a000);box-shadow:0 0 40px #ffe87088;margin-bottom:18px;}
+#title-screen .credit{
+  position:absolute;bottom:14px;font-size:16px;color:#ffe8b8aa;letter-spacing:1px;
+}
+
+/* ── LAYOUT: top bar + left panel + canvas ── */
+#game-wrap{
+  display:flex;flex-direction:column;
+  width:100vw;height:100vh;
+}
+
+/* TOP STATS BAR */
+#topbar{
+  height:var(--top-h);flex-shrink:0;
+  background:var(--ink);color:var(--panel);
+  display:flex;align-items:center;gap:0;
+  border-bottom:3px solid var(--panel-darker);
+  z-index:10;
+}
+#topbar .city-lbl{
+  font-family:'Press Start 2P',monospace;font-size:7px;
+  color:var(--accent-y);letter-spacing:1px;
+  padding:0 10px;border-right:2px solid var(--panel-darker);white-space:nowrap;
+}
+.tb-stat{
+  display:flex;align-items:center;gap:3px;
+  padding:0 10px;border-right:2px solid var(--panel-darker);
+  font-size:16px;white-space:nowrap;height:100%;
+}
+.tb-val{color:#fff;font-weight:bold;}
+#st-disaster{color:#ff8844;display:none;
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  padding:0 8px;animation:blink 0.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.tb-controls{margin-left:auto;display:flex;gap:4px;padding:0 6px;}
+.tb-ctrl{
+  background:var(--panel-dark);border:2px solid var(--panel-darker);color:var(--ink);
+  font-family:'VT323',monospace;font-size:14px;
+  padding:1px 7px;cursor:pointer;box-shadow:1px 1px 0 #000;
+}
+.tb-ctrl:hover{background:var(--panel);}
+.tb-ctrl.on{background:var(--accent-y);}
+
+/* MIDDLE ROW: left panel + canvas */
+#mid-row{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT BUILD PANEL */
+#left-panel{
+  width:var(--left-w);flex-shrink:0;
+  background:var(--panel);
+  border-right:4px solid var(--ink);
+  display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+}
+#left-panel::-webkit-scrollbar{width:5px;}
+#left-panel::-webkit-scrollbar-track{background:var(--panel-dark);}
+#left-panel::-webkit-scrollbar-thumb{background:var(--ink);}
+
+.panel-hdr{
+  background:var(--ink);color:var(--panel);
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  padding:6px 5px;letter-spacing:1px;text-align:center;
+  border-bottom:2px solid var(--panel-darker);flex-shrink:0;
+}
+.panel-section{border-bottom:3px solid var(--ink);padding:4px 4px 5px;}
+.panel-section-lbl{
+  font-family:'Press Start 2P',monospace;font-size:5px;
+  color:var(--accent);letter-spacing:1px;padding:3px 2px 2px;
+}
+.pbtn{
+  display:block;width:100%;margin:2px 0;
+  background:var(--panel-dark);border:2px solid var(--ink);color:var(--ink);
+  font-family:'VT323',monospace;font-size:16px;
+  padding:2px 5px;cursor:pointer;text-align:left;
+  box-shadow:2px 2px 0 var(--ink);white-space:nowrap;overflow:hidden;
+}
+.pbtn:hover{background:var(--panel);transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink);}
+.pbtn.active{background:var(--accent-y);}
+.pbtn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink);}
+.pbtn .cost{font-size:12px;color:var(--ink-light);float:right;}
+
+/* MINIMAP — floating bottom-right corner */
+#minimap-section{
+  position:fixed;
+  bottom:10px;right:10px;
+  z-index:20;
+  background:var(--panel-dark);
+  border:3px solid var(--ink);
+  box-shadow:4px 4px 0 var(--ink);
+  padding:4px;
+}
+#minimap-lbl{
+  font-family:'Press Start 2P',monospace;font-size:5px;
+  color:var(--ink);text-align:center;padding:2px 0 3px;letter-spacing:1px;
+}
+#minimap{
+  display:block;width:160px;height:160px;
+  border:2px solid var(--ink);cursor:crosshair;
+  image-rendering:pixelated;
+}
+
+/* CANVAS */
+canvas#gameCanvas{flex:1;display:block;}
+
+/* Budget Panel */
+#budget-panel{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--panel);border:4px solid var(--ink);
+  padding:0;width:420px;
+  box-shadow:6px 6px 0 var(--ink);display:none;z-index:40;
+  font-family:'VT323',monospace;
+}
+#budget-panel h2{
+  font-family:'Press Start 2P',monospace;font-size:8px;color:var(--panel);
+  background:var(--ink);padding:10px 12px;margin:0;letter-spacing:1px;
+}
+#budget-close{float:right;cursor:pointer;font-size:20px;color:var(--panel);margin-top:-2px;}
+.budget-body{padding:10px 14px;}
+.budget-section{margin-bottom:10px;border-bottom:2px solid var(--panel-darker);padding-bottom:8px;}
+.budget-section:last-child{border-bottom:none;margin-bottom:0;}
+.budget-section-title{
+  font-family:'Press Start 2P',monospace;font-size:6px;color:var(--accent);
+  letter-spacing:1px;margin-bottom:6px;
+}
+.budget-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:17px;color:var(--ink);padding:2px 0;
+}
+.budget-row .bval{font-size:18px;font-weight:bold;color:var(--ink);}
+.budget-row .bval.green{color:#007700;}
+.budget-row .bval.red{color:#cc2200;}
+.budget-slider-row{
+  display:flex;align-items:center;gap:8px;font-size:16px;padding:3px 0;
+}
+.budget-slider-row label{flex:1;color:var(--ink);}
+.budget-slider-row input[type=range]{
+  flex:1;accent-color:var(--ink);cursor:pointer;
+}
+.budget-slider-row .bpct{width:36px;text-align:right;font-size:16px;color:var(--ink);}
+.budget-slider-row .bamt{width:60px;text-align:right;font-size:15px;color:var(--ink-light);}
+.budget-net{
+  font-family:'Press Start 2P',monospace;font-size:9px;
+  text-align:center;padding:8px;margin-top:6px;
+  border:2px solid var(--ink);
+}
+.budget-net.surplus{background:#ccffcc;color:#005500;}
+.budget-net.deficit{background:#ffcccc;color:#cc0000;}
+
+/* Disaster camera flash overlay */
+#disaster-flash{
+  position:fixed;inset:0;pointer-events:none;z-index:100;
+  opacity:0;transition:opacity 0.15s;
+}
+
+/* Toast */
+#msg{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--panel);border:3px solid var(--ink);padding:6px 18px;
+  font-size:22px;color:var(--ink);pointer-events:none;display:none;white-space:nowrap;
+  box-shadow:4px 4px 0 var(--ink);z-index:50;
+}
+/* RCI demand bar — bottom of screen */
+#rci-bar{
+  position:fixed;bottom:0;left:160px;right:0;
+  background:var(--ink);border-top:3px solid var(--panel-darker);
+  display:flex;align-items:center;gap:10px;padding:3px 12px;
+  z-index:15;pointer-events:none;font-size:14px;color:var(--panel);
+}
+.rci-group{display:flex;align-items:center;gap:4px;}
+.rci-lbl{font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:1px;}
+.rci-track{width:60px;height:10px;background:#333;border:1px solid #555;position:relative;}
+.rci-fill{height:100%;transition:width 0.5s;}
+.rci-sep{width:1px;height:16px;background:var(--panel-darker);}
+#rci-needs{font-size:12px;color:#ffdd88;flex:1;text-align:right;font-family:'VT323',monospace;}
+
+/* VIEW OVERLAY CANVAS */
+#overlay-canvas{
+  position:absolute;top:0;left:0;pointer-events:none;
+  image-rendering:pixelated;display:none;opacity:0.7;
+}
+/* Info panel — floats over map when tile clicked */
+#info-panel{
+  position:fixed;top:44px;left:170px;
+  background:var(--panel);border:3px solid var(--ink);
+  padding:8px 10px;min-width:180px;
+  box-shadow:4px 4px 0 var(--ink);display:none;z-index:30;
+  font-size:15px;color:var(--ink);
+}
+#info-panel h3{font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:6px;color:var(--accent);}
+#info-panel .ip-row{display:flex;justify-content:space-between;border-bottom:1px solid var(--panel-darker);padding:2px 0;}
+#info-close{float:right;cursor:pointer;font-size:18px;margin-top:-4px;color:var(--ink);}
+
+/* Graphs panel */
+#graphs-panel{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--panel);border:4px solid var(--ink);
+  padding:12px;width:480px;
+  box-shadow:6px 6px 0 var(--ink);display:none;z-index:40;
+}
+#graphs-panel h2{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--ink);margin-bottom:10px;}
+#graphs-close{float:right;cursor:pointer;font-size:20px;margin-top:-6px;}
+#graphs-canvas{border:2px solid var(--ink);background:#1a1208;display:block;}
+.graph-tabs{display:flex;gap:4px;margin-bottom:6px;}
+.gtab{background:var(--panel-dark);border:2px solid var(--ink);color:var(--ink);
+  font-family:'Press Start 2P',monospace;font-size:6px;padding:4px 6px;cursor:pointer;}
+.gtab.active{background:var(--accent-y);}
+
+/* View mode buttons in topbar */
+.view-btn{background:var(--panel-dark);border:2px solid var(--panel-darker);color:var(--ink);
+  font-family:'VT323',monospace;font-size:14px;padding:1px 6px;cursor:pointer;box-shadow:1px 1px 0 #000;}
+.view-btn:hover,.view-btn.active{background:var(--accent-y);}
+</style>
+</head>
+<body>
+
+<!-- ══ TITLE SCREEN ══ -->
+<div id="title-screen">
+  <div class="title-sun"></div>
+  <h1>WAVEPUSHER</h1>
+  <div class="tagline">Build your city. Shape the wave.</div>
+  <button class="title-btn" onclick="startNewGame()">🏙 NEW CITY</button>
+  <button class="title-btn" onclick="startLoadGame()">📂 LOAD CITY</button>
+  <div class="credit">SimCity-style city builder &nbsp;·&nbsp; Arrow keys / right-drag to pan</div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="game-wrap">
+
+  <!-- TOP STATS BAR -->
+  <div id="topbar">
+    <div class="city-lbl">WAVEPUSHER</div>
+    <div class="tb-stat" onclick="openBudget()" style="cursor:pointer;text-decoration:underline dotted;" title="Click to open budget">💰 <span class="tb-val" id="st-funds">$50,000</span></div>
+    <div class="tb-stat">👥 <span class="tb-val" id="st-pop">0</span></div>
+    <div class="tb-stat">📅 Yr <span class="tb-val" id="st-year">1</span></div>
+    <div class="tb-stat">😊 <span class="tb-val" id="st-approval">50%</span></div>
+    <div class="tb-stat">⚡ <span class="tb-val" id="st-power">0/0</span></div>
+    <span id="st-disaster">⚠ DISASTER!</span>
+    <!-- View mode buttons -->
+    <div style="display:flex;gap:3px;margin-left:8px;">
+      <button class="view-btn active" id="vb-normal"  onclick="setView('normal')">🗺 Normal</button>
+      <button class="view-btn" id="vb-power"   onclick="setView('power')">⚡ Power</button>
+      <button class="view-btn" id="vb-crime"   onclick="setView('crime')">🚨 Crime</button>
+      <button class="view-btn" id="vb-pollution" onclick="setView('pollution')">💨 Pollut</button>
+      <button class="view-btn" id="vb-landval" onclick="setView('landval')">💎 Land</button>
+      <button class="view-btn" onclick="openGraphs()">📈 Graphs</button>
+    </div>
+    <div class="tb-controls">
+      <button class="tb-ctrl on" id="btn-disasters" onclick="toggleDisasters()">⚠ ON</button>
+      <button class="tb-ctrl" id="btn-speed" onclick="cycleSpeed()">⏩1x</button>
+      <button class="tb-ctrl" onclick="saveGame()">💾</button>
+      <button class="tb-ctrl" onclick="loadGame()">📂</button>
+      <button class="tb-ctrl" onclick="showTitle()">🏠</button>
+    </div>
+  </div>
+
+  <div id="mid-row">
+
+    <!-- LEFT BUILD PANEL -->
+    <div id="left-panel">
+      <div class="panel-hdr">⚒ BUILD</div>
+
+      <div class="panel-section">
+        <div class="panel-section-lbl">🛣 ROADS & POWER</div>
+        <button class="pbtn" data-tool="road">🛣 Road <span class="cost">$10</span></button>
+        <button class="pbtn" data-tool="rail">🚆 Rail <span class="cost">$25</span></button>
+        <button class="pbtn" data-tool="power">⚡ Power <span class="cost">$15</span></button>
+        <button class="pbtn" data-tool="bulldoze">💥 Bulldoze <span class="cost">$5</span></button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-lbl">🏘 ZONES</div>
+        <button class="pbtn" data-tool="rzone">🏠 Residential <span class="cost">$10</span></button>
+        <button class="pbtn" data-tool="czone">🏪 Commercial <span class="cost">$20</span></button>
+        <button class="pbtn" data-tool="izone">🏭 Industrial <span class="cost">$20</span></button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-lbl">🏛 SERVICES</div>
+        <button class="pbtn" data-tool="police">🚔 Police <span class="cost">$500</span></button>
+        <button class="pbtn" data-tool="fire">🚒 Fire Stn <span class="cost">$500</span></button>
+        <button class="pbtn" data-tool="hospital">🏥 Hospital <span class="cost">$800</span></button>
+        <button class="pbtn" data-tool="school">🏫 School <span class="cost">$400</span></button>
+        <button class="pbtn" data-tool="park">🌳 Park <span class="cost">$50</span></button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-lbl">⚡ POWER PLANTS</div>
+        <button class="pbtn" data-tool="coal">⚫ Coal <span class="cost">$3k</span></button>
+        <button class="pbtn" data-tool="nuclear">☢ Nuclear <span class="cost">$5k</span></button>
+        <button class="pbtn" data-tool="solar">☀ Solar <span class="cost">$1.5k</span></button>
+        <button class="pbtn" data-tool="wind">💨 Wind <span class="cost">$800</span></button>
+        <button class="pbtn" data-tool="oil">🛢 Oil <span class="cost">$2.5k</span></button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-lbl">✈ LANDMARKS</div>
+        <button class="pbtn" data-tool="airport">✈ Airport <span class="cost">$8k</span></button>
+        <button class="pbtn" data-tool="port">⚓ Seaport <span class="cost">$3k</span></button>
+        <button class="pbtn" data-tool="stadium">🏟 Stadium <span class="cost">$5k</span></button>
+        <button class="pbtn" data-tool="train_station">🚉 Train Stn <span class="cost">$4k</span></button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-lbl">🌐 TRADE ROUTES</div>
+        <div id="trade-panel" style="font-size:13px;color:var(--ink);padding:2px 0;">
+          <div style="font-size:12px;color:var(--ink-light);">Build roads to highway exits &amp; ports to seaway exits to trade</div>
+          <div id="trade-city-list" style="margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-lbl">⚠ DISASTERS</div>
+        <button class="pbtn" onclick="triggerDisaster('fire')">🔥 Fire</button>
+        <button class="pbtn" onclick="triggerDisaster('monster')">👾 Monster</button>
+        <button class="pbtn" onclick="triggerDisaster('crash')">💥 Plane Crash</button>
+      </div>
+
+    </div>
+
+    <div id="canvas-wrap" style="position:relative;flex:1;overflow:hidden;">
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="overlay-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- RCI demand bar -->
+<div id="rci-bar">
+  <div class="rci-group">
+    <div class="rci-lbl" style="color:#6ddc6d;">RES</div>
+    <div class="rci-track"><div class="rci-fill" id="rci-r" style="background:#4dbc4d;width:0%"></div></div>
+  </div>
+  <div class="rci-sep"></div>
+  <div class="rci-group">
+    <div class="rci-lbl" style="color:#6d9ddc;">COM</div>
+    <div class="rci-track"><div class="rci-fill" id="rci-c" style="background:#4d7dbc;width:0%"></div></div>
+  </div>
+  <div class="rci-sep"></div>
+  <div class="rci-group">
+    <div class="rci-lbl" style="color:#dcbc6d;">IND</div>
+    <div class="rci-track"><div class="rci-fill" id="rci-i" style="background:#bc9c4d;width:0%"></div></div>
+  </div>
+  <span id="rci-needs"></span>
+</div>
+
+<!-- Info panel (tile click) -->
+<div id="info-panel">
+  <span id="info-close" onclick="document.getElementById('info-panel').style.display='none'">✕</span>
+  <h3 id="info-title">TILE INFO</h3>
+  <div id="info-body"></div>
+</div>
+
+<!-- Graphs panel -->
+<div id="graphs-panel">
+  <span id="graphs-close" onclick="document.getElementById('graphs-panel').style.display='none'">✕</span>
+  <h2>📈 CITY GRAPHS</h2>
+  <div class="graph-tabs">
+    <button class="gtab active" onclick="showGraph('pop')">Population</button>
+    <button class="gtab" onclick="showGraph('funds')">Funds</button>
+    <button class="gtab" onclick="showGraph('approval')">Approval</button>
+    <button class="gtab" onclick="showGraph('power')">Power</button>
+  </div>
+  <canvas id="graphs-canvas" width="452" height="200"></canvas>
+</div>
+
+<!-- Budget Panel -->
+<div id="budget-panel">
+  <h2><span id="budget-close" onclick="closeBudget()">✕</span>📊 CITY BUDGET</h2>
+  <div class="budget-body">
+    <div class="budget-section">
+      <div class="budget-section-title">💰 TAX REVENUE</div>
+      <div class="budget-slider-row">
+        <label>🏠 Residential Tax</label>
+        <input type="range" min="0" max="20" value="8" id="tax-res" oninput="updateBudget()">
+        <span class="bpct" id="tax-res-pct">8%</span>
+        <span class="bamt" id="tax-res-amt">$0</span>
+      </div>
+      <div class="budget-slider-row">
+        <label>🏪 Commercial Tax</label>
+        <input type="range" min="0" max="20" value="10" id="tax-com" oninput="updateBudget()">
+        <span class="bpct" id="tax-com-pct">10%</span>
+        <span class="bamt" id="tax-com-amt">$0</span>
+      </div>
+      <div class="budget-slider-row">
+        <label>🏭 Industrial Tax</label>
+        <input type="range" min="0" max="20" value="12" id="tax-ind" oninput="updateBudget()">
+        <span class="bpct" id="tax-ind-pct">12%</span>
+        <span class="bamt" id="tax-ind-amt">$0</span>
+      </div>
+      <div class="budget-row">Total Revenue <span class="bval green" id="bud-revenue">$0</span></div>
+    </div>
+    <div class="budget-section">
+      <div class="budget-section-title">💸 SPENDING (% of max)</div>
+      <div class="budget-slider-row">
+        <label>🚔 Police</label>
+        <input type="range" min="0" max="100" value="100" id="sp-police" oninput="updateBudget()">
+        <span class="bpct" id="sp-police-pct">100%</span>
+        <span class="bamt" id="sp-police-amt">$0</span>
+      </div>
+      <div class="budget-slider-row">
+        <label>🚒 Fire Dept</label>
+        <input type="range" min="0" max="100" value="100" id="sp-fire" oninput="updateBudget()">
+        <span class="bpct" id="sp-fire-pct">100%</span>
+        <span class="bamt" id="sp-fire-amt">$0</span>
+      </div>
+      <div class="budget-slider-row">
+        <label>🏥 Health</label>
+        <input type="range" min="0" max="100" value="100" id="sp-health" oninput="updateBudget()">
+        <span class="bpct" id="sp-health-pct">100%</span>
+        <span class="bamt" id="sp-health-amt">$0</span>
+      </div>
+      <div class="budget-slider-row">
+        <label>🏫 Education</label>
+        <input type="range" min="0" max="100" value="100" id="sp-edu" oninput="updateBudget()">
+        <span class="bpct" id="sp-edu-pct">100%</span>
+        <span class="bamt" id="sp-edu-amt">$0</span>
+      </div>
+      <div class="budget-slider-row">
+        <label>🛣 Transport</label>
+        <input type="range" min="0" max="100" value="80" id="sp-roads" oninput="updateBudget()">
+        <span class="bpct" id="sp-roads-pct">80%</span>
+        <span class="bamt" id="sp-roads-amt">$0</span>
+      </div>
+      <div class="budget-row">Total Spending <span class="bval red" id="bud-spending">$0</span></div>
+    </div>
+    <div class="budget-section">
+      <div class="budget-row">Current Funds <span class="bval" id="bud-funds">$0</span></div>
+      <div id="budget-net" class="budget-net surplus">NET THIS YEAR: $0</div>
+    </div>
+  </div>
+</div>
+
+<!-- Disaster flash overlay -->
+<div id="disaster-flash"></div>
+
+<div id="msg"></div>
+
+<!-- Floating minimap -->
+<div id="minimap-section">
+  <div id="minimap-lbl">MINIMAP</div>
+  <canvas id="minimap" width="160" height="160"></canvas>
+</div>
+<script>
+// ============================================================
+// CONSTANTS & TILE IDS
+// ============================================================
+const GRID=120, CELL=40;
+const T={
+  EMPTY:0,ROAD:1,POWER:2,RAIL:3,
+  R_ZONE:10,C_ZONE:11,I_ZONE:12,
+  // Residential: cottage(13), house(14), bighouse(15), apt2x2(16), tower2x2(17)
+  R1:13,R2:14,R3:15,RAPT:16,RTOWER:17,
+  // Commercial: shop(18), cafe(19), office(20), mall2x2(21), skyscraper2x2(22)
+  C1:18,C2:19,C3:20,CMALL:21,CSKY:22,
+  // Industrial: workshop(23), factory(24), warehouse(25), plant2x2(26)
+  I1:23,I2:24,I3:25,IPLANT:26,
+  COAL:30,OIL:31,NUCLEAR:32,SOLAR:33,WIND:34,
+  POLICE:40,FIRE_ST:41,HOSPITAL:42,SCHOOL:43,UNIVERSITY:44,STADIUM:45,
+  TRAIN_STATION:46,
+  PARK:50,FOUNTAIN:51,TREE:52,
+  WATER:60,BRIDGE_H:61,BRIDGE_V:62,
+  RUBBLE:70,PORT:80,AIRPORT:81,CROSSING:82,
+  HIGHWAY:83,  // highway edge connector (2-wide road)
+  SEAWAY:84    // seaway edge connector (navigable water channel)
+};
+// Multi-tile building registry: tileID -> size (all are sz x sz)
+const MULTI_TILE={
+  [30]:2,[31]:2,[32]:2,[33]:2,  // power plants
+  [44]:2,[45]:2,[80]:2,[46]:2, // university,stadium,port,train_station
+  [81]:3,                        // airport
+  [16]:2,[17]:2,                 // apt, tower
+  [21]:2,[22]:2,                 // mall, skyscraper
+  [26]:2,                        // industrial plant
+};
+// Map tile -> "root type" so we can find top-left of any multi-tile building
+function getMultiSize(t){ return MULTI_TILE[t]||1; }
+// isTL defined earlier
+function bulldozeMulti(gx,gy){
+  // Find top-left of any multi-tile building at gx,gy and clear all its tiles
+  let t=state.grid[gy][gx];
+  let sz=getMultiSize(t);
+  if(sz<=1){ state.grid[gy][gx]=T.EMPTY; return; }
+  // Walk up/left to find top-left corner
+  let ox=gx,oy=gy;
+  while(ox>0&&state.grid[oy][ox-1]===t) ox--;
+  while(oy>0&&state.grid[oy-1][ox]===t) oy--;
+  for(let dy=0;dy<sz;dy++) for(let dx=0;dx<sz;dx++){
+    let nx=ox+dx,ny=oy+dy;
+    if(nx<GRID&&ny<GRID) state.grid[ny][nx]=T.RUBBLE;
+  }
+}
+const COLORS={
+  [T.EMPTY]:'#6ba84a',[T.ROAD]:'#a09070',[T.RAIL]:'#7a6a5a',[T.POWER]:'#bb0',
+  [T.R_ZONE]:'#4a8a4a',[T.C_ZONE]:'#4a6ab0',[T.I_ZONE]:'#b07a2a',
+  [T.R1]:'#5a9a5a',[T.R2]:'#4a8a6a',[T.R3]:'#3a7a7a',
+  [T.RAPT]:'#2a6a8a',[T.RTOWER]:'#1a5a7a',
+  [T.C1]:'#5a7ab0',[T.C2]:'#6a8ac0',[T.C3]:'#7a9ad0',
+  [T.CMALL]:'#4a5aa0',[T.CSKY]:'#8aaae0',
+  [T.I1]:'#c08a3a',[T.I2]:'#b07030',[T.I3]:'#a06020',[T.IPLANT]:'#806020',
+  [T.COAL]:'#303030',[T.NUCLEAR]:'#606090',[T.SOLAR]:'#c0c000',[T.WIND]:'#90b0d0',
+  [T.POLICE]:'#2020c0',[T.FIRE_ST]:'#c02020',[T.HOSPITAL]:'#e0e0e0',[T.SCHOOL]:'#d0a000',
+  [T.TRAIN_STATION]:'#6a5a4a',
+  [T.PARK]:'#2a7a2a',[T.FOUNTAIN]:'#4a9aaa',[T.TREE]:'#1a6a1a',
+  [T.WATER]:'#3a78b8',[T.BRIDGE_H]:'#8a7040',[T.BRIDGE_V]:'#8a7040',
+  [T.RUBBLE]:'#7a6a5a',[T.PORT]:'#3a6a8a',[T.AIRPORT]:'#888080',
+  [T.STADIUM]:'#6a4a8a',[T.UNIVERSITY]:'#9a5a2a',
+  [T.CROSSING]:'#887860',
+  [T.HIGHWAY]:'#b8a878',
+  [T.SEAWAY]:'#2a68b8'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state={
+  grid:null, funds:50000, year:1, month:0, pop:0, approval:50,
+  powerProd:0, powerCons:0,
+  disastersEnabled:true,
+  cityName:'Wavepusher',
+  // RCI demand 0-100
+  demandR:50, demandC:30, demandI:40,
+  // overlay maps (computed each sim tick)
+  pollutionMap:null, crimeMap:null, landValMap:null, powerMap:null,
+  // history arrays (one entry per year)
+  history:{ pop:[], funds:[], approval:[], power:[] },
+  // Budget sliders (persisted)
+  taxRes:8, taxCom:10, taxInd:12,
+  spPolice:100, spFire:100, spHealth:100, spEdu:100, spRoads:80
+};
+let currentView='normal';
+let currentGraph='pop';
+let vehicles=[]; // {type:'car'|'plane'|'heli', x,y, dx,dy, tile:{gx,gy}, phase, crashing, crashTimer, sprite}
+let monsters=[]; // {x,y,tx,ty,hp,frame,attacking}
+let fires=[];    // {gx,gy,timer}
+let npcCities=[]; // {name, edge, pos, controlled:'npc'|'player', tradeGood, x, y}
+let tradeRoutes=[]; // active ships/trucks on trade routes
+let trainState=[]; // moved here for clarity
+let animFrame=0;
+let smokeTime=0;  // slow float for smoke animation
+let fireTime=0;   // slow float for fire animation
+let simSpeed=1; // 1,2,4
+let simTick=0;
+let lastSimTime=0;
+
+// ============================================================
+// VIEWPORT
+// ============================================================
+let vx=0,vy=0; // viewport offset (pixels into canvas)
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const miniCanvas=document.getElementById('minimap');
+const mctx=miniCanvas.getContext('2d');
+let currentTool='road';
+let isDragging=false, dragBtn=-1, lastDragCell={gx:-1,gy:-1};
+let isPanning=false, panStartX=0,panStartY=0,panVX=0,panVY=0;
+let isMiniDrag=false;
+let hoverGX=-1, hoverGY=-1; // current mouse tile position for preview
+
+// ============================================================
+// SOUND SYSTEM (Web Audio API — no files needed)
+// ============================================================
+let audioCtx=null;
+let masterGain=null;
+let masterComp=null;
+function getAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    // Master compressor to catch any peaks
+    masterComp=audioCtx.createDynamicsCompressor();
+    masterComp.threshold.value=-18;
+    masterComp.knee.value=6;
+    masterComp.ratio.value=8;
+    masterComp.attack.value=0.003;
+    masterComp.release.value=0.15;
+    // Master gain — everything quiet
+    masterGain=audioCtx.createGain();
+    masterGain.gain.value=0.55;
+    masterComp.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
+  }
+  return audioCtx;
+}
+function dest(){ getAudio(); return masterComp; }
+
+function playSound(name){
+  try{
+    let a=getAudio();
+    let now=a.currentTime;
+    switch(name){
+      case 'build': {
+        // Short satisfying click/thud
+        let o=a.createOscillator(), g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.frequency.setValueAtTime(440,now);
+        o.frequency.exponentialRampToValueAtTime(220,now+0.08);
+        g.gain.setValueAtTime(0.07,now);
+        g.gain.exponentialRampToValueAtTime(0.001,now+0.12);
+        o.start(now);o.stop(now+0.12);
+        break;
+      }
+      case 'bulldoze': {
+        // Crunchy low thud
+        let buf=a.createBuffer(1,a.sampleRate*0.15,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.05));
+        let src=a.createBufferSource(), g=a.createGain();
+        let filt=a.createBiquadFilter();filt.type='lowpass';filt.frequency.value=300;
+        src.buffer=buf;src.connect(filt);filt.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.15);
+        src.start(now);
+        break;
+      }
+      case 'fire': {
+        // Crackling noise burst
+        let buf=a.createBuffer(1,a.sampleRate*0.4,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.2));
+        let src=a.createBufferSource(), g=a.createGain();
+        let filt=a.createBiquadFilter();filt.type='bandpass';filt.frequency.value=600;filt.Q.value=0.5;
+        src.buffer=buf;src.connect(filt);filt.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.4);
+        src.start(now);
+        break;
+      }
+      case 'monster': {
+        // Deep roar: low oscillator sweep
+        let o=a.createOscillator(), g=a.createGain();
+        let dist=a.createWaveShaper();
+        let curve=new Float32Array(256);
+        for(let i=0;i<256;i++) curve[i]=Math.tanh((i/128-1)*4);
+        dist.curve=curve;
+        o.connect(dist);dist.connect(g);g.connect(dest());
+        o.type='sawtooth';
+        o.frequency.setValueAtTime(60,now);
+        o.frequency.exponentialRampToValueAtTime(25,now+0.7);
+        g.gain.setValueAtTime(0.07,now);
+        g.gain.exponentialRampToValueAtTime(0.001,now+0.8);
+        o.start(now);o.stop(now+0.8);
+        break;
+      }
+      case 'stomp': {
+        // Thump
+        let buf=a.createBuffer(1,a.sampleRate*0.2,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.04));
+        let src=a.createBufferSource(), g=a.createGain();
+        let filt=a.createBiquadFilter();filt.type='lowpass';filt.frequency.value=150;
+        src.buffer=buf;src.connect(filt);filt.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+        src.start(now);
+        break;
+      }
+      case 'monsterDie': {
+        // Descending tone
+        let o=a.createOscillator(), g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sine';
+        o.frequency.setValueAtTime(400,now);
+        o.frequency.exponentialRampToValueAtTime(80,now+0.6);
+        g.gain.setValueAtTime(0.07,now);
+        g.gain.exponentialRampToValueAtTime(0.001,now+0.6);
+        o.start(now);o.stop(now+0.6);
+        break;
+      }
+      case 'crash': {
+        // Explosion noise
+        let buf=a.createBuffer(1,a.sampleRate*0.6,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.18));
+        let src=a.createBufferSource(), g=a.createGain();
+        let filt=a.createBiquadFilter();filt.type='lowpass';filt.frequency.value=500;
+        src.buffer=buf;src.connect(filt);filt.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.6);
+        src.start(now);
+        break;
+      }
+      case 'coin': {
+        let o=a.createOscillator(), g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sine';
+        o.frequency.setValueAtTime(880,now);
+        o.frequency.setValueAtTime(1320,now+0.06);
+        g.gain.setValueAtTime(0.06,now);
+        g.gain.exponentialRampToValueAtTime(0.001,now+0.25);
+        o.start(now);o.stop(now+0.25);
+        break;
+      }
+      case 'road': {
+        // Gravel crunch
+        let buf=a.createBuffer(1,a.sampleRate*0.18,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.07))*Math.random();
+        let src=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+        f.type='bandpass';f.frequency.value=900;f.Q.value=0.8;
+        src.buffer=buf;src.connect(f);f.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.18);
+        src.start(now);break;
+      }
+      case 'rail': {
+        // Metal clank x2
+        for(let k=0;k<2;k++){
+          let o=a.createOscillator(),g=a.createGain();
+          o.connect(g);g.connect(dest());
+          o.type='sine';o.frequency.value=180+k*40;
+          g.gain.setValueAtTime(0,now+k*0.09);
+          g.gain.linearRampToValueAtTime(0.06,now+k*0.09+0.01);
+          g.gain.exponentialRampToValueAtTime(0.001,now+k*0.09+0.14);
+          o.start(now);o.stop(now+0.3);
+        }
+        break;
+      }
+      case 'power': {
+        // Electric buzz
+        let o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sawtooth';o.frequency.value=120;
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+        o.start(now);o.stop(now+0.2);break;
+      }
+      case 'rzone': {
+        // Cheerful ascending chime
+        [523,659,784].forEach((f,i)=>{
+          let o=a.createOscillator(),g=a.createGain();
+          o.connect(g);g.connect(dest());
+          o.type='sine';o.frequency.value=f;
+          g.gain.setValueAtTime(0,now+i*0.07);
+          g.gain.linearRampToValueAtTime(0.06,now+i*0.07+0.02);
+          g.gain.exponentialRampToValueAtTime(0.001,now+i*0.07+0.18);
+          o.start(now+i*0.07);o.stop(now+0.4);
+        });break;
+      }
+      case 'czone': {
+        // Cash register ding
+        let o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sine';
+        o.frequency.setValueAtTime(1200,now);
+        o.frequency.exponentialRampToValueAtTime(800,now+0.15);
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+        o.start(now);o.stop(now+0.2);break;
+      }
+      case 'izone': {
+        // Factory clunk
+        let buf=a.createBuffer(1,a.sampleRate*0.2,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.06));
+        let src=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+        f.type='lowpass';f.frequency.value=400;
+        src.buffer=buf;src.connect(f);f.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+        src.start(now);break;
+      }
+      case 'police': {
+        // Short siren blip
+        let o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='triangle';
+        o.frequency.setValueAtTime(800,now);o.frequency.setValueAtTime(1000,now+0.08);
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+        o.start(now);o.stop(now+0.2);break;
+      }
+      case 'fire_stn': {
+        // Fire truck horn
+        let o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sawtooth';
+        o.frequency.setValueAtTime(400,now);o.frequency.setValueAtTime(350,now+0.1);
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.22);
+        o.start(now);o.stop(now+0.22);break;
+      }
+      case 'hospital': {
+        // Soft medical beep
+        let o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sine';o.frequency.value=880;
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.15);
+        o.start(now);o.stop(now+0.15);break;
+      }
+      case 'school': {
+        // Bell ring
+        [1047,1319].forEach((f,i)=>{
+          let o=a.createOscillator(),g=a.createGain();
+          o.connect(g);g.connect(dest());
+          o.type='sine';o.frequency.value=f;
+          g.gain.setValueAtTime(0.06,now+i*0.08);
+          g.gain.exponentialRampToValueAtTime(0.001,now+i*0.08+0.3);
+          o.start(now+i*0.08);o.stop(now+0.5);
+        });break;
+      }
+      case 'park': {
+        // Birdsong chirp (two quick rising tones)
+        [1400,1800].forEach((f,i)=>{
+          let o=a.createOscillator(),g=a.createGain();
+          o.connect(g);g.connect(dest());
+          o.type='sine';
+          o.frequency.setValueAtTime(f,now+i*0.06);
+          o.frequency.linearRampToValueAtTime(f*1.2,now+i*0.06+0.08);
+          g.gain.setValueAtTime(0.07,now+i*0.06);
+          g.gain.exponentialRampToValueAtTime(0.001,now+i*0.06+0.12);
+          o.start(now+i*0.06);o.stop(now+0.25);
+        });break;
+      }
+      case 'coal': {
+        // Deep rumble + steam hiss
+        let buf=a.createBuffer(1,a.sampleRate*0.35,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.15));
+        let src=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+        f.type='lowpass';f.frequency.value=250;
+        src.buffer=buf;src.connect(f);f.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.35);
+        src.start(now);break;
+      }
+      case 'nuclear': {
+        // Low hum with slight tremolo
+        let o=a.createOscillator(),lfo=a.createOscillator(),lfog=a.createGain(),g=a.createGain();
+        lfo.frequency.value=8;lfo.connect(lfog);lfog.gain.value=10;lfog.connect(o.frequency);
+        o.connect(g);g.connect(dest());
+        o.type='sine';o.frequency.value=60;
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.5);
+        lfo.start(now);lfo.stop(now+0.5);o.start(now);o.stop(now+0.5);break;
+      }
+      case 'solar': {
+        // Gentle high shimmer
+        [2000,2500,3000].forEach((f,i)=>{
+          let o=a.createOscillator(),g=a.createGain();
+          o.connect(g);g.connect(dest());
+          o.type='sine';o.frequency.value=f;
+          g.gain.setValueAtTime(0,now+i*0.04);
+          g.gain.linearRampToValueAtTime(0.04,now+i*0.04+0.05);
+          g.gain.exponentialRampToValueAtTime(0.001,now+i*0.04+0.25);
+          o.start(now+i*0.04);o.stop(now+0.4);
+        });break;
+      }
+      case 'wind': {
+        // Whoosh
+        let buf=a.createBuffer(1,a.sampleRate*0.4,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.sin(i/(a.sampleRate*0.4)*Math.PI);
+        let src=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+        f.type='bandpass';f.frequency.value=500;f.Q.value=0.3;
+        src.buffer=buf;src.connect(f);f.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.4);
+        src.start(now);break;
+      }
+      case 'oil': {
+        // Drilling chug
+        for(let k=0;k<3;k++){
+          let buf=a.createBuffer(1,a.sampleRate*0.07,a.sampleRate);
+          let d=buf.getChannelData(0);
+          for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.03));
+          let src=a.createBufferSource(),g=a.createGain(),fi=a.createBiquadFilter();
+          fi.type='lowpass';fi.frequency.value=300;
+          src.buffer=buf;src.connect(fi);fi.connect(g);g.connect(dest());
+          g.gain.setValueAtTime(0.07,now+k*0.1);g.gain.exponentialRampToValueAtTime(0.001,now+k*0.1+0.07);
+          src.start(now+k*0.1);
+        }break;
+      }
+      case 'airport': {
+        // Jet whoosh
+        let buf=a.createBuffer(1,a.sampleRate*0.6,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++){
+          let env=Math.sin(i/(a.sampleRate*0.6)*Math.PI);
+          d[i]=(Math.random()*2-1)*env;
+        }
+        let src=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+        f.type='highpass';f.frequency.value=1000;
+        src.buffer=buf;src.connect(f);f.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.6);
+        src.start(now);break;
+      }
+      case 'port': {
+        // Foghorn
+        let o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(dest());
+        o.type='sawtooth';
+        o.frequency.setValueAtTime(120,now);o.frequency.setValueAtTime(100,now+0.25);
+        g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.45);
+        o.start(now);o.stop(now+0.45);break;
+      }
+      case 'stadium': {
+        // Crowd cheer
+        let buf=a.createBuffer(1,a.sampleRate*0.5,a.sampleRate);
+        let d=buf.getChannelData(0);
+        for(let i=0;i<d.length;i++){
+          let env=Math.sin(i/(a.sampleRate*0.5)*Math.PI)*0.7+0.3;
+          d[i]=(Math.random()*2-1)*env*0.4;
+        }
+        let src=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+        f.type='bandpass';f.frequency.value=800;f.Q.value=0.5;
+        src.buffer=buf;src.connect(f);f.connect(g);g.connect(dest());
+        g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.5);
+        src.start(now);break;
+      }
+    }
+  } catch(e){}
+}
+
+
+function startNewGame(){
+  document.getElementById('title-screen').style.display='none';
+  init();
+}
+function startLoadGame(){
+  document.getElementById('title-screen').style.display='none';
+  init();
+  loadGame();
+}
+function showTitle(){
+  document.getElementById('title-screen').style.display='flex';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init(){
+  state.grid=Array.from({length:GRID},()=>new Uint8Array(GRID));
+  vehicles=[];monsters=[];fires=[];trainState=[];stopLights={};
+  npcCities=[];tradeRoutes=[];
+
+  // ── Generate connected river/lake system ──
+  // Start with a main river snaking across the map
+  generateWaterways();
+
+  // ── Scatter extra lakes ──
+  for(let i=0;i<8;i++){
+    let wx=8+Math.floor(Math.random()*(GRID-16));
+    let wy=8+Math.floor(Math.random()*(GRID-16));
+    let ww=4+Math.floor(Math.random()*10);
+    let wh=4+Math.floor(Math.random()*10);
+    for(let dy=0;dy<wh;dy++) for(let dx=0;dx<ww;dx++){
+      let nx=wx+dx,ny=wy+dy;
+      if(nx>=0&&nx<GRID&&ny>=0&&ny<GRID) state.grid[ny][nx]=T.WATER;
+    }
+  }
+
+  // ── Scatter trees ──
+  for(let i=0;i<500;i++){
+    let tx=Math.floor(Math.random()*GRID),ty=Math.floor(Math.random()*GRID);
+    if(state.grid[ty][tx]===T.EMPTY) state.grid[ty][tx]=T.TREE;
+  }
+
+  // ── Place highway + seaway edge connections ──
+  placeEdgeConnections();
+
+  // ── Spawn NPC cities ──
+  spawnNpcCities();
+
+  resizeCanvas();
+  selectTool('road');
+  requestAnimationFrame(gameLoop);
+}
+
+function generateWaterways(){
+  // River 1: horizontal snake
+  let rx=Math.floor(Math.random()*10)+5;
+  let ry=Math.floor(GRID*0.3+Math.random()*GRID*0.2);
+  for(let step=0;step<GRID*2;step++){
+    for(let w=-2;w<=2;w++) for(let h=-1;h<=1;h++){
+      let nx=rx+h, ny=ry+w;
+      if(nx>=0&&nx<GRID&&ny>=0&&ny<GRID) state.grid[ny][nx]=T.WATER;
+    }
+    rx++;
+    if(Math.random()<0.3) ry+=Math.random()<0.5?1:-1;
+    ry=Math.max(5,Math.min(GRID-5,ry));
+    if(rx>=GRID) break;
+  }
+  // River 2: vertical snake
+  let vx=Math.floor(GRID*0.4+Math.random()*GRID*0.2);
+  let vy=0;
+  for(let step=0;step<GRID;step++){
+    for(let w=-2;w<=2;w++) for(let h=-1;h<=1;h++){
+      let nx=vx+w, ny=vy+h;
+      if(nx>=0&&nx<GRID&&ny>=0&&ny<GRID) state.grid[ny][nx]=T.WATER;
+    }
+    vy++;
+    if(Math.random()<0.3) vx+=Math.random()<0.5?1:-1;
+    vx=Math.max(5,Math.min(GRID-5,vx));
+  }
+}
+
+function placeEdgeConnections(){
+  // Highway connections (road-coloured, 2 tiles wide) at 2-4 random edge positions
+  let edges=['top','bottom','left','right'];
+  // Always place 1 highway + 1 seaway per edge side for variety
+  let hwPositions=[];
+  let swPositions=[];
+  // Top edge highways
+  for(let i=0;i<2;i++){
+    let x=10+Math.floor(Math.random()*(GRID-20));
+    hwPositions.push({edge:'top',pos:x});
+    state.grid[0][x]=T.HIGHWAY; state.grid[0][x+1]=T.HIGHWAY;
+    state.grid[1][x]=T.HIGHWAY; state.grid[1][x+1]=T.HIGHWAY;
+  }
+  // Bottom edge
+  for(let i=0;i<2;i++){
+    let x=10+Math.floor(Math.random()*(GRID-20));
+    hwPositions.push({edge:'bottom',pos:x});
+    state.grid[GRID-1][x]=T.HIGHWAY; state.grid[GRID-1][x+1]=T.HIGHWAY;
+    state.grid[GRID-2][x]=T.HIGHWAY; state.grid[GRID-2][x+1]=T.HIGHWAY;
+  }
+  // Left edge
+  for(let i=0;i<2;i++){
+    let y=10+Math.floor(Math.random()*(GRID-20));
+    hwPositions.push({edge:'left',pos:y});
+    state.grid[y][0]=T.HIGHWAY; state.grid[y+1][0]=T.HIGHWAY;
+    state.grid[y][1]=T.HIGHWAY; state.grid[y+1][1]=T.HIGHWAY;
+  }
+  // Right edge
+  for(let i=0;i<2;i++){
+    let y=10+Math.floor(Math.random()*(GRID-20));
+    hwPositions.push({edge:'right',pos:y});
+    state.grid[y][GRID-1]=T.HIGHWAY; state.grid[y+1][GRID-1]=T.HIGHWAY;
+    state.grid[y][GRID-2]=T.HIGHWAY; state.grid[y+1][GRID-2]=T.HIGHWAY;
+  }
+
+  // Seaway connections — find water tiles near edges and mark them as seaway exits
+  // Top edge: find water in top 5 rows
+  for(let x=2;x<GRID-2;x++){
+    if(state.grid[2][x]===T.WATER&&state.grid[1][x]===T.WATER){
+      state.grid[0][x]=T.SEAWAY; swPositions.push({edge:'top',pos:x}); break;
+    }
+  }
+  // Bottom edge
+  for(let x=2;x<GRID-2;x++){
+    if(state.grid[GRID-3][x]===T.WATER&&state.grid[GRID-2][x]===T.WATER){
+      state.grid[GRID-1][x]=T.SEAWAY; swPositions.push({edge:'bottom',pos:x}); break;
+    }
+  }
+  // Left edge
+  for(let y=2;y<GRID-2;y++){
+    if(state.grid[y][2]===T.WATER&&state.grid[y][1]===T.WATER){
+      state.grid[y][0]=T.SEAWAY; swPositions.push({edge:'left',pos:y}); break;
+    }
+  }
+  // Right edge
+  for(let y=2;y<GRID-2;y++){
+    if(state.grid[y][GRID-3]===T.WATER&&state.grid[y][GRID-2]===T.WATER){
+      state.grid[y][GRID-1]=T.SEAWAY; swPositions.push({edge:'right',pos:y}); break;
+    }
+  }
+  state._hwPos=hwPositions;
+  state._swPos=swPositions;
+}
+
+function resizeCanvas(){
+  const leftW=160, topH=36;
+  canvas.width=Math.max(100, window.innerWidth-leftW);
+  canvas.height=Math.max(100, window.innerHeight-topH);
+}
+window.addEventListener('resize',resizeCanvas);
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+let speeds=[1,2,4];
+let speedIdx=0;
+function cycleSpeed(){
+  speedIdx=(speedIdx+1)%speeds.length;
+  simSpeed=speeds[speedIdx];
+  document.getElementById('btn-speed').textContent=`⏩${simSpeed}x`;
+}
+
+function gameLoop(ts){
+  requestAnimationFrame(gameLoop);
+  animFrame++;
+  smokeTime+=0.008;  // ~0.5 cycles per second at 60fps
+  fireTime+=0.015;   // ~0.9 cycles per second — slow flicker
+  // Simulation ticks
+  let tickInterval=Math.floor(1800/simSpeed);
+  if(ts-lastSimTime>tickInterval){
+    lastSimTime=ts;
+    simTick++;
+    simulate();
+  }
+  render();
+}
+
+// ============================================================
+// SIMULATION
+// ============================================================
+function simulate(){
+  // Grow zones
+  growZones();
+  // Update vehicles
+  updateVehicles();
+  // Update monsters
+  updateMonsters();
+  // Update fires
+  updateFires();
+  // Finance
+  if(simTick%12===0){
+    state.month++;
+    if(state.month>=12){state.month=0;state.year++;}
+    let bud=calcBudget();
+    state.funds+=bud.net;
+    if(bud.revenue>0) playSound('coin');
+    // Approval affected by spending levels
+    if(state.spPolice<50||state.spFire<50) state.approval=Math.max(0,state.approval-5);
+    if(state.spHealth<50||state.spEdu<50) state.approval=Math.max(0,state.approval-3);
+    // Record history
+    state.history.pop.push(state.pop);
+    state.history.funds.push(state.funds);
+    state.history.approval.push(state.approval);
+    state.history.power.push(state.powerProd);
+    // Trim to last 30 years
+    for(let k of ['pop','funds','approval','power'])
+      if(state.history[k].length>30) state.history[k].shift();
+    updateStats();
+  }
+  // Spawn vehicles periodically
+  if(simTick%8===0) spawnCar();
+  if(simTick%60===0) updateStopLights();
+  if(simTick%80===0) spawnTrain();
+  if(simTick%40===0) spawnAircraft();
+  // Trade routes
+  if(simTick%30===0) updateTradeRoutes();
+  // Random disasters
+  if(state.disastersEnabled && simTick%200===0 && Math.random()<0.15){
+    let types=['fire','monster'];
+    // only crash if airport exists
+    if(countType([T.AIRPORT])>0) types.push('crash');
+    triggerDisaster(types[Math.floor(Math.random()*types.length)]);
+  }
+}
+
+function countType(types){
+  let n=0;
+  for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++)
+    if(types.includes(state.grid[y][x])) n++;
+  return n;
+}
+
+function growZones(){
+  let hasRoad=false, hasPower=false;
+  // Power BFS
+  let powered=new Set();
+  let pqueue=[];
+  for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++){
+    let t=state.grid[y][x];
+    if(t===T.COAL||t===T.NUCLEAR||t===T.SOLAR||t===T.WIND||t===T.OIL){
+      pqueue.push([x,y]);powered.add(x+','+y);
+    }
+  }
+  while(pqueue.length){
+    let [cx,cy]=pqueue.shift();
+    for(let [nx,ny] of [[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]]){
+      if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+      let k=nx+','+ny;
+      if(powered.has(k)) continue;
+      let t=state.grid[ny][nx];
+      if(t===T.POWER||t===T.ROAD||t===T.RAIL||t===T.BRIDGE_H||t===T.BRIDGE_V||isBuilding(t)){
+        powered.add(k);pqueue.push([nx,ny]);
+      }
+    }
+  }
+  state.powerProd=countType([T.COAL,T.OIL,T.NUCLEAR,T.SOLAR,T.WIND])*800;
+  // Evolve zones
+  let pop=0;
+  for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++){
+    let t=state.grid[y][x];
+    let adjacentRoad=hasAdjacentType(x,y,[T.ROAD,T.BRIDGE_H,T.BRIDGE_V]);
+    let isPowered=powered.has(x+','+y)||hasAdjacentPowered(x,y,powered);
+    if(t===T.R_ZONE&&adjacentRoad&&isPowered){
+      let police=serviceNear(x,y,T.POLICE,10);
+      let fire=serviceNear(x,y,T.FIRE_ST,10);
+      let school=serviceNear(x,y,T.SCHOOL,12);
+      let score=(police?1:0)+(fire?1:0)+(school?1:0);
+      state.grid[y][x]=score>=2?T.R3:score===1?T.R2:T.R1;
+    }
+    if(t===T.C_ZONE&&adjacentRoad&&isPowered){
+      let police=serviceNear(x,y,T.POLICE,10);
+      let uni=serviceNear(x,y,T.UNIVERSITY,15);
+      state.grid[y][x]=uni?T.C3:police?T.C2:T.C1;
+    }
+    if(t===T.I_ZONE&&adjacentRoad&&isPowered){
+      let uni=serviceNear(x,y,T.UNIVERSITY,15);
+      state.grid[y][x]=uni?T.I3:T.I2;
+    }
+    // Auto-upgrade adjacent 2x2 zones to apartments/mall
+    if(t===T.R3&&simTick%120===0){
+      // Check if 2x2 block of R3 — upgrade to apartment
+      if(x+1<GRID&&y+1<GRID&&
+         state.grid[y][x+1]===T.R3&&state.grid[y+1][x]===T.R3&&state.grid[y+1][x+1]===T.R3){
+        state.grid[y][x]=T.RAPT;state.grid[y][x+1]=T.RAPT;
+        state.grid[y+1][x]=T.RAPT;state.grid[y+1][x+1]=T.RAPT;
+      }
+    }
+    if(t===T.RAPT&&isTL(x,y,T.RAPT)&&simTick%300===0){
+      // Upgrade apartment to tower if near university
+      if(serviceNear(x,y,T.UNIVERSITY,10)&&x+1<GRID&&y+1<GRID){
+        state.grid[y][x]=T.RTOWER;state.grid[y][x+1]=T.RTOWER;
+        state.grid[y+1][x]=T.RTOWER;state.grid[y+1][x+1]=T.RTOWER;
+      }
+    }
+    if(t===T.C3&&simTick%120===0){
+      if(x+1<GRID&&y+1<GRID&&
+         state.grid[y][x+1]===T.C3&&state.grid[y+1][x]===T.C3&&state.grid[y+1][x+1]===T.C3){
+        state.grid[y][x]=T.CMALL;state.grid[y][x+1]=T.CMALL;
+        state.grid[y+1][x]=T.CMALL;state.grid[y+1][x+1]=T.CMALL;
+      }
+    }
+    if(t===T.CMALL&&isTL(x,y,T.CMALL)&&simTick%300===0&&serviceNear(x,y,T.UNIVERSITY,12)){
+      if(x+1<GRID&&y+1<GRID){
+        state.grid[y][x]=T.CSKY;state.grid[y][x+1]=T.CSKY;
+        state.grid[y+1][x]=T.CSKY;state.grid[y+1][x+1]=T.CSKY;
+      }
+    }
+    if(t===T.I3&&simTick%150===0){
+      if(x+1<GRID&&y+1<GRID&&
+         state.grid[y][x+1]===T.I3&&state.grid[y+1][x]===T.I3&&state.grid[y+1][x+1]===T.I3){
+        state.grid[y][x]=T.IPLANT;state.grid[y][x+1]=T.IPLANT;
+        state.grid[y+1][x]=T.IPLANT;state.grid[y+1][x+1]=T.IPLANT;
+      }
+    }
+    t=state.grid[y][x];
+    if(t===T.R1) pop+=20;
+    if(t===T.R2) pop+=40;
+    if(t===T.R3) pop+=70;
+    if(t===T.RAPT&&isTL(x,y,T.RAPT)) pop+=200;
+    if(t===T.RTOWER&&isTL(x,y,T.RTOWER)) pop+=500;
+    if(t===T.C1||t===T.C2||t===T.C3) pop+=8;
+    if(t===T.CMALL&&isTL(x,y,T.CMALL)) pop+=30;
+    if(t===T.CSKY&&isTL(x,y,T.CSKY)) pop+=80;
+  }
+  state.pop=pop;
+  state.powerCons=Math.floor(pop*2);
+  if(pop>0){
+    let s=50;
+    if(countType([T.FIRE_ST])>0) s+=10;
+    if(countType([T.POLICE])>0) s+=10;
+    if(countType([T.HOSPITAL])>0) s+=5;
+    if(countType([T.STADIUM])>0) s+=10;
+    if(fires.length>0) s-=Math.min(30,fires.length*5);
+    if(monsters.length>0) s-=15;
+    state.approval=Math.max(0,Math.min(100,s));
+  }
+  // RCI demand
+  let resCount=countType([T.R1,T.R2,T.R3]);
+  let comCount=countType([T.C1,T.C2,T.C3]);
+  let indCount=countType([T.I1,T.I2,T.I3]);
+  let resZone=countType([T.R_ZONE]);
+  let comZone=countType([T.C_ZONE]);
+  let indZone=countType([T.I_ZONE]);
+  // Demand rises when pop needs more services, falls when oversupplied
+  state.demandR=Math.max(0,Math.min(100, 50+(resZone-resCount)*3+(pop<100?30:pop<500?15:0)));
+  state.demandC=Math.max(0,Math.min(100, 40+(comZone-comCount)*3+(resCount>5?20:0)));
+  state.demandI=Math.max(0,Math.min(100, 35+(indZone-indCount)*3+(comCount>3?15:0)));
+  updateRCI();
+  // Overlay maps
+  computeOverlayMaps();
+}
+
+function hasAdjacentType(x,y,types){
+  for(let [nx,ny] of [[x-1,y],[x+1,y],[x,y-1],[x,y+1]]){
+    if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+    if(types.includes(state.grid[ny][nx])) return true;
+  }
+  return false;
+}
+function hasAdjacentPowered(x,y,powered){
+  for(let [nx,ny] of [[x-1,y],[x+1,y],[x,y-1],[x,y+1]]){
+    if(powered.has(nx+','+ny)) return true;
+  }
+  return false;
+}
+function serviceNear(x,y,type,range){
+  for(let dy=-range;dy<=range;dy++) for(let dx=-range;dx<=range;dx++){
+    let nx=x+dx,ny=y+dy;
+    if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+    if(state.grid[ny][nx]===type) return true;
+  }
+  return false;
+}
+function isBuilding(t){
+  const non=[T.EMPTY,T.ROAD,T.RAIL,T.POWER,T.WATER,T.BRIDGE_H,T.BRIDGE_V,
+             T.TREE,T.RUBBLE,T.CROSSING];
+  return t>0&&!non.includes(t);
+}
+
+// ============================================================
+// VEHICLES
+// ============================================================
+// ── TRAFFIC SYSTEM ──
+// Cars travel in left-hand lane (offset from center by laneOffset)
+// Stop lights: intersections with 4 connections alternate N/S vs E/W every 60 ticks
+let stopLights={}; // key='gx,gy' value={phase:0|1, timer}
+
+const LANE_OFF=5; // pixels from tile center to lane center
+const CAR_SPEED_BASE=1.6;
+const CAR_MAX=60;
+
+function isRoadTile(t){
+  return t===T.ROAD||t===T.BRIDGE_H||t===T.BRIDGE_V||t===T.CROSSING;
+}
+
+function getIntersectionDegree(gx,gy){
+  let n=0;
+  for(let [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
+    let nx=gx+dx,ny=gy+dy;
+    if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+    if(isRoadTile(state.grid[ny][nx])) n++;
+  }
+  return n;
+}
+
+function updateStopLights(){
+  // Discover all 4-way intersections and manage their phase
+  for(let y=1;y<GRID-1;y++) for(let x=1;x<GRID-1;x++){
+    if(!isRoadTile(state.grid[y][x])) continue;
+    if(getIntersectionDegree(x,y)===4){
+      let k=x+','+y;
+      if(!stopLights[k]) stopLights[k]={phase:0,timer:0,gx:x,gy:y};
+      stopLights[k].timer++;
+      if(stopLights[k].timer>=60){
+        stopLights[k].timer=0;
+        stopLights[k].phase=1-stopLights[k].phase;
+      }
+    }
+  }
+}
+
+function isRedLight(gx,gy,dx,dy){
+  // Check if moving in direction dx,dy FROM tile gx,gy hits a red light
+  // The stop light is at the intersection tile we're about to enter
+  let nx=gx+dx,ny=gy+dy;
+  let k=nx+','+ny;
+  let sl=stopLights[k];
+  if(!sl) return false;
+  // phase 0: NS green (dy!=0 goes), phase 1: EW green (dx!=0 goes)
+  if(sl.phase===0 && dx!==0) return true;  // EW red
+  if(sl.phase===1 && dy!==0) return true;  // NS red
+  return false;
+}
+
+function carLanePos(gx,gy,dx,dy){
+  // Return the pixel position for a car in the correct lane on tile gx,gy
+  // Cars drive on the RIGHT side of the road (left-hand traffic in canvas coords)
+  // Going right (dx=1): bottom lane → y offset +LANE_OFF
+  // Going left  (dx=-1): top lane  → y offset -LANE_OFF
+  // Going down  (dy=1): left lane  → x offset -LANE_OFF (wait, right-hand: rightmost going down = left of tile in screen)
+  // Going up    (dy=-1): right lane → x offset +LANE_OFF
+  let bx=gx*CELL+CELL/2;
+  let by=gy*CELL+CELL/2;
+  if(dx===1)  return {x:bx, y:by+LANE_OFF};
+  if(dx===-1) return {x:bx, y:by-LANE_OFF};
+  if(dy===1)  return {x:bx-LANE_OFF, y:by};
+  if(dy===-1) return {x:bx+LANE_OFF, y:by};
+  return {x:bx,y:by};
+}
+
+function spawnCar(){
+  if(vehicles.filter(v=>v.type==='car').length>=CAR_MAX) return;
+  let roads=[];
+  for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++)
+    if(isRoadTile(state.grid[y][x])) roads.push({x,y});
+  if(roads.length<3) return;
+  let r=roads[Math.floor(Math.random()*roads.length)];
+  let dirs=[];
+  for(let [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
+    let nx=r.x+dx,ny=r.y+dy;
+    if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+    if(isRoadTile(state.grid[ny][nx])) dirs.push({dx,dy});
+  }
+  if(!dirs.length) return;
+  let d=dirs[Math.floor(Math.random()*dirs.length)];
+  let lp=carLanePos(r.x,r.y,d.dx,d.dy);
+  let colors=['#e83030','#3060e8','#e8b830','#30e860','#e830b8','#30e8d8','#f0f0f0','#ffaa00','#ff6600','#00ccaa'];
+  vehicles.push({
+    type:'car',
+    x:lp.x, y:lp.y,
+    dx:d.dx, dy:d.dy,
+    gx:r.x, gy:r.y,
+    speed:CAR_SPEED_BASE+Math.random()*0.8,
+    color:colors[Math.floor(Math.random()*colors.length)],
+    life:900+Math.floor(Math.random()*600),
+    stopped:0
+  });
+}
+
+function spawnAircraft(){
+  if(vehicles.filter(v=>v.type==='plane'||v.type==='heli').length>=6) return;
+  let type=Math.random()<0.6?'plane':'heli';
+  // Spawn from edge
+  let edge=Math.floor(Math.random()*4);
+  let x,y,dx,dy;
+  let worldW=GRID*CELL, worldH=GRID*CELL;
+  if(edge===0){x=Math.random()*worldW;y=0;dx=(Math.random()-0.5)*1.5;dy=1+Math.random();}
+  else if(edge===1){x=worldW;y=Math.random()*worldH;dx=-(1+Math.random());dy=(Math.random()-0.5)*1.5;}
+  else if(edge===2){x=Math.random()*worldW;y=worldH;dx=(Math.random()-0.5)*1.5;dy=-(1+Math.random());}
+  else{x=0;y=Math.random()*worldH;dx=1+Math.random();dy=(Math.random()-0.5)*1.5;}
+  let spd=type==='plane'?2.5:1.5;
+  let len=Math.sqrt(dx*dx+dy*dy);
+  vehicles.push({
+    type,x,y,
+    dx:dx/len*spd,dy:dy/len*spd,
+    crashing:false,crashTimer:0,
+    altitude:0.8+Math.random()*0.4,
+    life:1200
+  });
+}
+
+function updateVehicles(){
+  for(let i=vehicles.length-1;i>=0;i--){
+    let v=vehicles[i];
+    v.life--;
+    if(v.life<=0){vehicles.splice(i,1);continue;}
+    if(v.type==='car'){
+      updateCar(v,i);
+    } else {
+      updateAircraft(v,i);
+    }
+  }
+  updateTrains();
+}
+
+function updateCar(v,idx){
+  // Check stop light before moving into next tile
+  let edgeDist;
+  if(v.dx===1)  edgeDist=(v.gx+1)*CELL-v.x;
+  else if(v.dx===-1) edgeDist=v.x-v.gx*CELL;
+  else if(v.dy===1)  edgeDist=(v.gy+1)*CELL-v.y;
+  else edgeDist=v.y-v.gy*CELL;
+
+  // Stop for red light when close to tile edge
+  if(edgeDist<8 && isRedLight(v.gx,v.gy,v.dx,v.dy)){
+    v.stopped=2;
+    return;
+  }
+  // Stop for car ahead (simple check: any car within 14px in same direction)
+  let blocked=false;
+  for(let other of vehicles){
+    if(other===v||other.type!=='car') continue;
+    let ahead_x=v.x+v.dx*14, ahead_y=v.y+v.dy*14;
+    if(Math.abs(other.x-ahead_x)<6&&Math.abs(other.y-ahead_y)<6){
+      blocked=true; break;
+    }
+  }
+  if(blocked){ v.stopped=1; return; }
+  v.stopped=0;
+
+  let speed=v.speed;
+  // Try to advance in current direction
+  let nx=v.x+v.dx*speed, ny=v.y+v.dy*speed;
+  let ngx=Math.floor(nx/CELL), ngy=Math.floor(ny/CELL);
+  if(ngx<0||ngy<0||ngx>=GRID||ngy>=GRID){vehicles.splice(idx,1);return;}
+  let nt=state.grid[ngy][ngx];
+  if(isRoadTile(nt)){
+    // Snap to lane center
+    let lp=carLanePos(ngx,ngy,v.dx,v.dy);
+    if(v.dx!==0) v.y+=(lp.y-v.y)*0.25;
+    if(v.dy!==0) v.x+=(lp.x-v.x)*0.25;
+    v.x=nx; v.y=ny; v.gx=ngx; v.gy=ngy;
+  } else {
+    // Need to turn — pick valid road neighbor that isn't behind us
+    let opts=[];
+    for(let [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      if(dx===-v.dx&&dy===-v.dy) continue; // no U-turns
+      let tx=v.gx+dx, ty=v.gy+dy;
+      if(tx<0||ty<0||tx>=GRID||ty>=GRID) continue;
+      if(isRoadTile(state.grid[ty][tx])) opts.push({dx,dy});
+    }
+    if(!opts.length){vehicles.splice(idx,1);return;}
+    // Prefer straight ahead if available, else random
+    let chosen=opts.find(o=>o.dx===v.dx&&o.dy===v.dy)||opts[Math.floor(Math.random()*opts.length)];
+    v.dx=chosen.dx; v.dy=chosen.dy;
+    let lp=carLanePos(v.gx,v.gy,v.dx,v.dy);
+    v.x=lp.x; v.y=lp.y;
+  }
+}
+
+function shuffleDirs(dirs){
+  let a=[...dirs];
+  for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ── TRAINS ──
+function isRailTile(t){ return t===T.RAIL||t===T.CROSSING||t===T.TRAIN_STATION; }
+
+function spawnTrain(){
+  if(trainState.length>=3) return;
+  // Find a rail tile with a neighbor
+  let rails=[];
+  for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++)
+    if(isRailTile(state.grid[y][x])) rails.push({x,y});
+  if(rails.length<4) return;
+  let r=rails[Math.floor(Math.random()*rails.length)];
+  let dirs=[];
+  for(let [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
+    let nx=r.x+dx,ny=r.y+dy;
+    if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+    if(isRailTile(state.grid[ny][nx])) dirs.push({dx,dy});
+  }
+  if(!dirs.length) return;
+  let d=dirs[Math.floor(Math.random()*dirs.length)];
+  trainState.push({
+    x:r.x*CELL+CELL/2, y:r.y*CELL+CELL/2,
+    dx:d.dx, dy:d.dy,
+    gx:r.x, gy:r.y,
+    speed:1.8,
+    life:1200,
+    cars:3+Math.floor(Math.random()*3), // number of carriages
+    tailX:[],tailY:[] // history for tail segments
+  });
+}
+
+function updateTrains(){
+  for(let i=trainState.length-1;i>=0;i--){
+    let tr=trainState[i];
+    tr.life--;
+    if(tr.life<=0){trainState.splice(i,1);continue;}
+    // Store tail position history
+    tr.tailX.unshift(tr.x); tr.tailY.unshift(tr.y);
+    if(tr.tailX.length>tr.cars*18) tr.tailX.pop(),tr.tailY.pop();
+
+    let nx=tr.x+tr.dx*tr.speed, ny=tr.y+tr.dy*tr.speed;
+    let ngx=Math.floor(nx/CELL), ngy=Math.floor(ny/CELL);
+    if(ngx<0||ngy<0||ngx>=GRID||ngy>=GRID){trainState.splice(i,1);continue;}
+    let nt=state.grid[ngy][ngx];
+    if(isRailTile(nt)){
+      tr.x=nx;tr.y=ny;tr.gx=ngx;tr.gy=ngy;
+    } else {
+      let opts=[];
+      for(let [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        if(dx===-tr.dx&&dy===-tr.dy) continue;
+        let tx=tr.gx+dx,ty=tr.gy+dy;
+        if(tx<0||ty<0||tx>=GRID||ty>=GRID) continue;
+        if(isRailTile(state.grid[ty][tx])) opts.push({dx,dy});
+      }
+      if(!opts.length){trainState.splice(i,1);continue;}
+      let ch=opts.find(o=>o.dx===tr.dx&&o.dy===tr.dy)||opts[0];
+      tr.dx=ch.dx;tr.dy=ch.dy;
+    }
+  }
+}
+
+function drawTrain(tr){
+  ctx.save();
+  // Draw tail carriages first
+  let segLen=18;
+  for(let s=tr.cars-1;s>=0;s--){
+    let hi=s*segLen;
+    if(hi>=tr.tailX.length) continue;
+    let tx=tr.tailX[hi]??tr.x, ty=tr.tailY[hi]??tr.y;
+    let nx2=tr.tailX[hi+1]??tx, ny2=tr.tailY[hi+1]??ty;
+    let ang=Math.atan2(ty-ny2,tx-nx2);
+    ctx.save();
+    ctx.translate(tx,ty);ctx.rotate(ang);
+    // Carriage body
+    ctx.fillStyle=s===0?'#cc2200':'#882200';
+    ctx.fillRect(-13,-5,26,10);
+    // Windows
+    ctx.fillStyle='#ffe8a0';
+    for(let w=0;w<3;w++) ctx.fillRect(-9+w*7,-3,5,5);
+    // Wheels
+    ctx.fillStyle='#333';
+    ctx.fillRect(-10,4,5,3);ctx.fillRect(5,4,5,3);
+    ctx.restore();
+  }
+  // Engine
+  ctx.save();
+  let ang=Math.atan2(tr.dy,tr.dx);
+  ctx.translate(tr.x,tr.y);ctx.rotate(ang);
+  ctx.fillStyle='#1a1a1a';ctx.fillRect(-14,-6,28,12);
+  ctx.fillStyle='#cc2200';ctx.fillRect(-14,-6,10,12);
+  ctx.fillStyle='#ffaa00';ctx.fillRect(12,-4,4,8); // headlight
+  ctx.fillStyle='#555';ctx.fillRect(-8,-10,6,5); // smokestack
+  // Smoke from engine
+  if(smokeTime%1<0.5){
+    ctx.fillStyle='rgba(80,80,80,0.4)';
+    ctx.beginPath();ctx.arc(-5,-14,5,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
+function drawStopLights(){
+  for(let k in stopLights){
+    let sl=stopLights[k];
+    let px=sl.gx*CELL-vx, py=sl.gy*CELL-vy;
+    if(px<-CELL||py<-CELL||px>canvas.width+CELL||py>canvas.height+CELL) continue;
+    // NS light
+    let nsGreen=sl.phase===0;
+    // Draw small traffic light boxes at each arm
+    // Top arm (going south = green when phase 0)
+    _drawLight(px+CELL/2-3, py+2,   nsGreen);
+    // Bottom arm
+    _drawLight(px+CELL/2-3, py+CELL-8, nsGreen);
+    // Left arm (going east = green when phase 1)
+    _drawLight(px+2,       py+CELL/2-3, !nsGreen);
+    // Right arm
+    _drawLight(px+CELL-8,  py+CELL/2-3, !nsGreen);
+  }
+}
+function _drawLight(x,y,green){
+  ctx.fillStyle='#111';ctx.fillRect(x,y,6,6);
+  ctx.fillStyle=green?'#00ee00':'#ee0000';
+  ctx.beginPath();ctx.arc(x+3,y+3,2.5,0,Math.PI*2);ctx.fill();
+}
+
+function updateAircraft(v,idx){
+  if(v.crashing){
+    v.crashTimer--;
+    v.x+=v.dx*0.5;v.y+=v.dy*0.5;
+    v.dy+=0.3; // fall
+    if(v.crashTimer<=0){
+      // cause fire at landing tile
+      let gx=Math.floor(v.x/CELL),gy=Math.floor(v.y/CELL);
+      if(gx>=0&&gy>=0&&gx<GRID&&gy<GRID){
+        fires.push({gx,gy,timer:60+Math.floor(Math.random()*60)});
+        if(state.grid[gy][gx]!==T.WATER) state.grid[gy][gx]=T.RUBBLE;
+      }
+      showMsg('💥 PLANE CRASH! Fire started!');
+      vehicles.splice(idx,1);
+    }
+    return;
+  }
+  v.x+=v.dx;v.y+=v.dy;
+  // Keep in world with gentle steering
+  let worldW=GRID*CELL,worldH=GRID*CELL;
+  if(v.x<-100||v.x>worldW+100||v.y<-100||v.y>worldH+100){
+    vehicles.splice(idx,1);
+  }
+}
+
+// ============================================================
+// MONSTERS
+// ============================================================
+function updateMonsters(){
+  for(let i=monsters.length-1;i>=0;i--){
+    let m=monsters[i];
+    m.frame++;
+
+    // Retarget every 120 frames — find nearest building tile
+    if(m.frame%120===0||!m.tx){
+      let best=null, bestDist=Infinity;
+      for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++){
+        let t=state.grid[y][x];
+        let isBuilt=(t>=T.R1&&t<=T.I3)||(t===T.POLICE||t===T.FIRE_ST||t===T.HOSPITAL||
+                    t===T.SCHOOL||t===T.COAL||t===T.NUCLEAR||t===T.SOLAR||
+                    t===T.AIRPORT||t===T.PORT||t===T.STADIUM);
+        if(isBuilt){
+          let wx=x*CELL+CELL/2, wy=y*CELL+CELL/2;
+          let d=(wx-m.x)*(wx-m.x)+(wy-m.y)*(wy-m.y);
+          if(d<bestDist){ bestDist=d; best={x,y}; }
+        }
+      }
+      if(best){
+        m.tx=best.x*CELL+CELL/2;
+        m.ty=best.y*CELL+CELL/2;
+      } else {
+        // No buildings — head to map center
+        m.tx=GRID*CELL/2; m.ty=GRID*CELL/2;
+      }
+    }
+
+    // Smooth movement every frame — 1.2px per frame toward target
+    if(m.tx!==undefined){
+      let ddx=m.tx-m.x, ddy=m.ty-m.y;
+      let dist=Math.sqrt(ddx*ddx+ddy*ddy);
+      let speed=1.2;
+      if(dist>speed){
+        m.x+=ddx/dist*speed;
+        m.y+=ddy/dist*speed;
+      }
+    }
+
+    // Stomp every 30 frames
+    if(m.frame%30===0){
+      let gx=Math.floor(m.x/CELL), gy=Math.floor(m.y/CELL);
+      if(gx>=0&&gy>=0&&gx<GRID&&gy<GRID){
+        let t=state.grid[gy][gx];
+        if(t!==T.WATER&&t!==T.EMPTY&&t!==T.TREE&&t!==T.RUBBLE){
+          state.grid[gy][gx]=T.RUBBLE;
+          fires.push({gx,gy,timer:80});
+          playSound('stomp');
+        }
+      }
+    }
+
+    m.hp--;
+    if(m.hp<=0){
+      monsters.splice(i,1);
+      showMsg('🎉 Monster defeated!');
+      playSound('monsterDie');
+    }
+  }
+}
+
+// ============================================================
+// FIRES
+// ============================================================
+function updateFires(){
+  for(let i=fires.length-1;i>=0;i--){
+    let f=fires[i];
+    f.timer--;
+    if(f.timer<=0){
+      if(state.grid[f.gy][f.gx]!==T.WATER) state.grid[f.gy][f.gx]=T.RUBBLE;
+      // Spread
+      if(Math.random()<0.3&&!serviceNear(f.gx,f.gy,T.FIRE_ST,8)){
+        for(let [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
+          let nx=f.gx+dx,ny=f.gy+dy;
+          if(nx<0||ny<0||nx>=GRID||ny>=GRID) continue;
+          let t=state.grid[ny][nx];
+          if(t!==T.WATER&&t!==T.EMPTY&&t!==T.RUBBLE&&t!==T.TREE&&Math.random()<0.4){
+            fires.push({gx:nx,gy:ny,timer:40+Math.floor(Math.random()*40)});
+          }
+        }
+      }
+      fires.splice(i,1);
+    }
+  }
+}
+
+// ============================================================
+// DISASTERS (manual trigger)
+// ============================================================
+function triggerDisaster(type){
+  if(type==='fire'){
+    let gx=Math.floor(Math.random()*GRID),gy=Math.floor(Math.random()*GRID);
+    fires.push({gx,gy,timer:60});
+    let wx=gx*CELL+CELL/2, wy=gy*CELL+CELL/2;
+    panCameraTo(wx,wy,800);
+    flashDisasterOverlay('rgba(255,80,0,0.5)');
+    playDisasterMusic('fire');
+    showMsg('🔥 Fire breaks out!');
+  } else if(type==='monster'){
+    let edge=Math.floor(Math.random()*4);
+    let x,y;
+    let worldW=GRID*CELL,worldH=GRID*CELL;
+    if(edge===0){x=Math.random()*worldW;y=CELL*2;}
+    else if(edge===1){x=worldW-CELL*2;y=Math.random()*worldH;}
+    else if(edge===2){x=Math.random()*worldW;y=worldH-CELL*2;}
+    else{x=CELL*2;y=Math.random()*worldH;}
+    monsters.push({x,y,tx:worldW/2,ty:worldH/2,hp:300,frame:0,
+      color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')});
+    panCameraTo(x,y,1000);
+    flashDisasterOverlay('rgba(80,0,120,0.5)');
+    playDisasterMusic('monster');
+    showMsg('👾 MONSTER ATTACK!');
+  } else if(type==='crash'){
+    let planes=vehicles.filter(v=>v.type==='plane'||v.type==='heli');
+    let wx,wy;
+    if(planes.length>0){
+      let p=planes[Math.floor(Math.random()*planes.length)];
+      p.crashing=true;p.crashTimer=60;
+      wx=p.x;wy=p.y;
+    } else {
+      let worldW=GRID*CELL,worldH=GRID*CELL;
+      wx=Math.random()*worldW;wy=Math.random()*worldH;
+      vehicles.push({
+        type:'plane',x:wx,y:wy,
+        dx:(Math.random()-0.5)*3,dy:2,
+        crashing:true,crashTimer:60,altitude:0.5,life:200
+      });
+    }
+    panCameraTo(wx,wy,600);
+    flashDisasterOverlay('rgba(255,200,0,0.5)');
+    playDisasterMusic('crash');
+    showMsg('✈️ MAYDAY! Aircraft in distress!');
+  }
+}
+
+function toggleDisasters(){
+  state.disastersEnabled=!state.disastersEnabled;
+  let btn=document.getElementById('btn-disasters');
+  btn.textContent=state.disastersEnabled?'⚠ ON':'⚠ OFF';
+  btn.classList.toggle('on', state.disastersEnabled);
+}
+
+// ============================================================
+// TOOLS & PLACEMENT
+// ============================================================
+function selectTool(tool){
+  currentTool=tool;
+  document.querySelectorAll('.pbtn[data-tool]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.tool===tool);
+  });
+}
+document.querySelectorAll('.pbtn[data-tool]').forEach(b=>{
+  b.addEventListener('click',()=>selectTool(b.dataset.tool));
+});
+
+const COSTS={
+  train_station:4000,
+  road:10,rail:25,power:15,
+  rzone:10,czone:20,izone:20,
+  park:50,police:500,fire:500,hospital:800,school:400,
+  coal:3000,oil:2500,nuclear:5000,solar:1500,wind:800,
+  airport:8000,port:3000,stadium:5000,
+  bulldoze:5,university:4000
+};
+
+function placeTile(gx,gy){
+  if(gx<0||gy<0||gx>=GRID||gy>=GRID) return;
+  let cur=state.grid[gy][gx];
+  let cost=0;
+
+  if(currentTool==='bulldoze'){
+    if(cur===T.EMPTY||cur===T.WATER) return;
+    cost=COSTS.bulldoze;
+    if(state.funds<cost){showMsg('Not enough funds!');return;}
+    state.funds-=cost;
+    bulldozeMulti(gx,gy);
+    playSound('bulldoze');
+    return;
+  }
+
+  // Water: only road (bridge) allowed
+  if(cur===T.WATER){
+    if(currentTool==='road'){
+      let leftT=gx>0?state.grid[gy][gx-1]:T.EMPTY;
+      let rightT=gx<GRID-1?state.grid[gy][gx+1]:T.EMPTY;
+      let isH=(leftT===T.ROAD||leftT===T.BRIDGE_H||rightT===T.ROAD||rightT===T.BRIDGE_H);
+      cost=COSTS.road*10;
+      if(state.funds<cost){showMsg('Bridge costs $'+cost+'!');return;}
+      state.funds-=cost;
+      state.grid[gy][gx]=isH?T.BRIDGE_H:T.BRIDGE_V;
+      return;
+    }
+    showMsg('Cannot build on water!');return;
+  }
+
+  // Block overwriting anything except empty/tree/rubble
+  const canOverwrite=[T.EMPTY,T.TREE,T.RUBBLE];
+  
+  // Multi-tile buildings
+  let multiSizes={airport:3,port:2,coal:2,nuclear:2,solar:2,stadium:2,university:2,train_station:2};
+  if(multiSizes[currentTool]){
+    let sz=multiSizes[currentTool];
+    for(let dy=0;dy<sz;dy++) for(let dx=0;dx<sz;dx++){
+      let nx=gx+dx,ny=gy+dy;
+      if(nx>=GRID||ny>=GRID){showMsg('Not enough space!');return;}
+      let t=state.grid[ny][nx];
+      if(t===T.WATER){showMsg('Cannot build on water!');return;}
+      if(!canOverwrite.includes(t)){showMsg('Bulldoze first!');return;}
+    }
+    // Seaport MUST be adjacent to water
+    if(currentTool==='port'){
+      let adjWater=false;
+      for(let dy=-1;dy<=sz;dy++) for(let dx=-1;dx<=sz;dx++){
+        if(dx>=0&&dx<sz&&dy>=0&&dy<sz) continue; // skip interior
+        let nx=gx+dx,ny=gy+dy;
+        if(nx>=0&&ny>=0&&nx<GRID&&ny<GRID&&state.grid[ny][nx]===T.WATER){adjWater=true;break;}
+      }
+      if(!adjWater){showMsg('Seaport must be built next to water!');return;}
+    }
+    let tileMap={airport:T.AIRPORT,port:T.PORT,coal:T.COAL,nuclear:T.NUCLEAR,
+                 solar:T.SOLAR,stadium:T.STADIUM,university:T.UNIVERSITY,
+                 train_station:T.TRAIN_STATION};
+    cost=COSTS[currentTool]||1000;
+    if(state.funds<cost){showMsg('Not enough funds!');return;}
+    state.funds-=cost;
+    for(let dy=0;dy<sz;dy++) for(let dx=0;dx<sz;dx++)
+      state.grid[gy+dy][gx+dx]=tileMap[currentTool];
+    let msndMap={airport:'airport',port:'port',coal:'coal',nuclear:'nuclear',solar:'solar',stadium:'stadium',university:'build',train_station:'rail'};
+    playSound(msndMap[currentTool]||'build');
+    return;
+  }
+
+  // Single tile — crossing: road on rail or rail on road creates a crossing
+  if(currentTool==='road' && cur===T.RAIL){
+    cost=COSTS.road;
+    if(state.funds<cost){showMsg('Not enough funds!');return;}
+    state.funds-=cost;
+    state.grid[gy][gx]=T.CROSSING;
+    playSound('road');
+    return;
+  }
+  if(currentTool==='rail' && cur===T.ROAD){
+    cost=COSTS.rail;
+    if(state.funds<cost){showMsg('Not enough funds!');return;}
+    state.funds-=cost;
+    state.grid[gy][gx]=T.CROSSING;
+    playSound('rail');
+    return;
+  }
+  if(!canOverwrite.includes(cur)){showMsg('Bulldoze first!');return;}
+
+  let tileMap={
+    road:T.ROAD,rail:T.RAIL,power:T.POWER,
+    rzone:T.R_ZONE,czone:T.C_ZONE,izone:T.I_ZONE,
+    park:T.PARK,police:T.POLICE,fire:T.FIRE_ST,
+    hospital:T.HOSPITAL,school:T.SCHOOL,wind:T.WIND,oil:T.OIL
+  };
+  if(tileMap[currentTool]===undefined){return;}
+  cost=COSTS[currentTool]||0;
+  if(state.funds<cost){showMsg('Not enough funds!');return;}
+  state.funds-=cost;
+  state.grid[gy][gx]=tileMap[currentTool];
+  // Per-building sound
+  let sndMap={road:'road',rail:'rail',power:'power',rzone:'rzone',czone:'czone',izone:'izone',
+    park:'park',police:'police',fire:'fire_stn',hospital:'hospital',school:'school',wind:'wind',oil:'oil'};
+  playSound(sndMap[currentTool]||'build');
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+// ── BUILD PREVIEW ──
+// Maps tool name → tile type it places (for preview color)
+const PREVIEW_COLOR={
+  road:'#a09070', rail:'#7a6a5a', power:'#cccc00',
+  rzone:'#4a8a4a', czone:'#4a6ab0', izone:'#b07a2a',
+  park:'#2a7a2a', police:'#2020c0', fire:'#c02020',
+  hospital:'#e0e0e0', school:'#d0a000',
+  coal:'#303030', nuclear:'#606090', solar:'#c0c000',
+  wind:'#90b0d0', oil:'#555555',
+  airport:'#888080', port:'#3a6a8a', stadium:'#6a4a8a',
+  train_station:'#6a5a4a',
+  bulldoze:'#cc2200',
+};
+const PREVIEW_SIZES={
+  airport:3, port:2, coal:2, nuclear:2, solar:2,
+  stadium:2, university:2, train_station:2,
+};
+
+function drawBuildPreview(){
+  if(hoverGX<0||hoverGY<0||hoverGX>=GRID||hoverGY>=GRID) return;
+  if(!currentTool||currentTool==='') return;
+  if(document.getElementById('graphs-panel').style.display==='block') return;
+
+  let sz=PREVIEW_SIZES[currentTool]||1;
+  let col=PREVIEW_COLOR[currentTool]||'#ffffff';
+  let px=hoverGX*CELL, py=hoverGY*CELL;
+  let W=sz*CELL, H=sz*CELL;
+
+  // Check if placement is valid
+  let canPlace=true;
+  const canOverwrite=[T.EMPTY,T.TREE,T.RUBBLE];
+  for(let dy=0;dy<sz&&canPlace;dy++){
+    for(let dx=0;dx<sz&&canPlace;dx++){
+      let nx=hoverGX+dx, ny=hoverGY+dy;
+      if(nx>=GRID||ny>=GRID){ canPlace=false; break; }
+      let t=state.grid[ny][nx];
+      if(currentTool==='bulldoze'){ if(t===T.EMPTY||t===T.WATER) canPlace=false; }
+      else if(currentTool==='road'){
+        if(t!==T.WATER&&!canOverwrite.includes(t)&&t!==T.RAIL&&t!==T.ROAD) canPlace=false;
+      }
+      else if(currentTool==='rail'){
+        if(t!==T.WATER&&!canOverwrite.includes(t)&&t!==T.ROAD&&t!==T.RAIL) canPlace=false;
+      }
+      else{
+        if(!canOverwrite.includes(t)) canPlace=false;
+      }
+    }
+  }
+  // Seaport must be adjacent to water
+  if(currentTool==='port'&&canPlace){
+    let sz2=2;
+    let adjWater=false;
+    for(let dy=-1;dy<=sz2;dy++) for(let dx=-1;dx<=sz2;dx++){
+      if(dx>=0&&dx<sz2&&dy>=0&&dy<sz2) continue;
+      let nx=hoverGX+dx,ny=hoverGY+dy;
+      if(nx>=0&&ny>=0&&nx<GRID&&ny<GRID&&state.grid[ny][nx]===T.WATER){adjWater=true;break;}
+    }
+    if(!adjWater) canPlace=false;
+  }
+
+  // Check cost
+  let cost=COSTS[currentTool]||0;
+  if(currentTool==='road'&&state.grid[hoverGY][hoverGX]===T.WATER) cost*=10;
+  let canAfford=state.funds>=cost;
+
+  // Draw semi-transparent preview
+  ctx.save();
+  ctx.globalAlpha=0.45;
+  ctx.fillStyle=canPlace&&canAfford ? col : '#cc2200';
+  ctx.fillRect(px, py, W, H);
+  ctx.globalAlpha=1;
+
+  // Border — green=ok, red=blocked
+  ctx.strokeStyle=canPlace&&canAfford ? '#00ff88' : '#ff2200';
+  ctx.lineWidth=2;
+  ctx.setLineDash([4,3]);
+  ctx.strokeRect(px+1, py+1, W-2, H-2);
+  ctx.setLineDash([]);
+
+  // Cost label
+  if(cost>0){
+    let label=canAfford?'$'+cost.toLocaleString():'NO FUNDS';
+    ctx.font='bold 11px VT323';
+    ctx.textAlign='center';
+    ctx.fillStyle='#000';
+    ctx.fillText(label, px+W/2+1, py+H/2+5);
+    ctx.fillStyle=canAfford?'#fff':'#ff8888';
+    ctx.fillText(label, px+W/2, py+H/2+4);
+  }
+
+  // For bulldoze: show an X
+  if(currentTool==='bulldoze'){
+    ctx.strokeStyle='#ff2200';
+    ctx.lineWidth=2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(px+4,py+4); ctx.lineTo(px+CELL-4,py+CELL-4);
+    ctx.moveTo(px+CELL-4,py+4); ctx.lineTo(px+4,py+CELL-4);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(-vx,-vy);
+  // Draw tiles
+  let startGX=Math.max(0,Math.floor(vx/CELL));
+  let startGY=Math.max(0,Math.floor(vy/CELL));
+  let endGX=Math.min(GRID,Math.ceil((vx+canvas.width)/CELL)+1);
+  let endGY=Math.min(GRID,Math.ceil((vy+canvas.height)/CELL)+1);
+  for(let gy=startGY;gy<endGY;gy++){
+    for(let gx=startGX;gx<endGX;gx++){
+      let t=state.grid[gy][gx];
+      drawTile(gx,gy,t);
+    }
+  }
+  // Draw fires
+  for(let f of fires) drawFire(f.gx,f.gy);
+  // Draw vehicles
+  for(let v of vehicles) drawVehicle(v);
+  for(let tr of trainState) drawTrain(tr);
+  drawStopLights();
+  // Draw trade vehicles
+  drawTradeVehicles();
+  // Draw monsters
+  for(let m of monsters) drawMonster(m);
+  // Draw build preview
+  drawBuildPreview();
+  ctx.restore();
+  drawMinimap();
+  updateStats();
+  if(currentView!=='normal') renderOverlay(currentView);
+}
+
+function drawTile(gx,gy,t){
+  let px=gx*CELL, py=gy*CELL;
+  let c=ctx;
+  switch(t){
+    case T.EMPTY: drawEmpty(c,px,py); break;
+    case T.WATER: drawWater(c,px,py); break;
+    case T.TREE: drawTree(c,px,py); break;
+    case T.ROAD: drawRoad(c,gx,gy,px,py); break;
+    case T.RAIL: drawRail(c,gx,gy,px,py); break;
+    case T.CROSSING: drawCrossing(c,gx,gy,px,py); break;
+    case T.POWER: drawPowerLine(c,gx,gy,px,py); break;
+    case T.BRIDGE_H: drawBridge(c,px,py,true); break;
+    case T.BRIDGE_V: drawBridge(c,px,py,false); break;
+    case T.R_ZONE: drawZone(c,px,py,'#2a6a2a','R'); break;
+    case T.C_ZONE: drawZone(c,px,py,'#2a3a7a','C'); break;
+    case T.I_ZONE: drawZone(c,px,py,'#7a4a1a','I'); break;
+    case T.R1: drawCottage(c,px,py); break;
+    case T.R2: drawHouse(c,px,py); break;
+    case T.R3: drawBigHouse(c,px,py); break;
+    case T.RAPT: drawApartment(c,gx,gy,px,py); break;
+    case T.RTOWER: drawTower(c,gx,gy,px,py); break;
+    case T.C1: drawShop(c,px,py); break;
+    case T.C2: drawCafe(c,px,py); break;
+    case T.C3: drawOffice(c,px,py); break;
+    case T.CMALL: drawMall(c,gx,gy,px,py); break;
+    case T.CSKY: drawSkyscraper(c,gx,gy,px,py); break;
+    case T.I1: drawWorkshop(c,px,py); break;
+    case T.I2: drawFactory(c,px,py); break;
+    case T.I3: drawWarehouse(c,px,py); break;
+    case T.IPLANT: drawIndustrialPlant(c,gx,gy,px,py); break;
+    case T.TRAIN_STATION: drawTrainStation(c,gx,gy,px,py); break;
+    case T.COAL: drawPowerPlant(c,gx,gy,px,py,'#1a1a1a','#444','COAL'); break;
+    case T.NUCLEAR: drawPowerPlant(c,gx,gy,px,py,'#4040a0','#8080d0','NUK'); break;
+    case T.SOLAR: drawSolarFarm(c,gx,gy,px,py); break;
+    case T.WIND: drawWind(c,px,py); break;
+    case T.OIL: drawOilRig(c,px,py); break;
+    case T.POLICE: drawService(c,px,py,'#2222cc','P'); break;
+    case T.FIRE_ST: drawService(c,px,py,'#cc2222','F'); break;
+    case T.HOSPITAL: drawService(c,px,py,'#cccccc','H'); break;
+    case T.SCHOOL: drawService(c,px,py,'#ccaa00','S'); break;
+    case T.UNIVERSITY: drawUniversity(c,gx,gy,px,py); break;
+    case T.STADIUM: drawStadium(c,gx,gy,px,py); break;
+    case T.PARK: drawPark(c,px,py); break;
+    case T.FOUNTAIN: drawPark(c,px,py); break;
+    case T.AIRPORT: drawAirport(c,gx,gy,px,py); break;
+    case T.PORT: drawPort(c,gx,gy,px,py); break;
+    case T.RUBBLE: drawRubble(c,px,py); break;
+    case T.HIGHWAY: drawHighway(c,gx,gy,px,py); break;
+    case T.SEAWAY: drawSeaway(c,px,py,gx,gy); break;
+  }
+}
+
+// ---- Tile drawing functions ----
+function drawEmpty(c,px,py){
+  c.fillStyle='#6ba84a';
+  c.fillRect(px,py,CELL,CELL);
+  // Subtle grass texture
+  c.fillStyle='#5a953a';
+  for(let i=0;i<4;i++) c.fillRect(px+3+i*9,py+3+((i*7)%31),2,3);
+}
+function drawWater(c,px,py){
+  let wave=Math.sin((animFrame*0.04)+(px+py)*0.05)*2;
+  c.fillStyle='#3a78b8';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#4a88c8';
+  c.fillRect(px,py+10+wave,CELL,4);
+  c.fillRect(px,py+24+wave,CELL,4);
+  c.fillStyle='#5a98d855';
+  c.fillRect(px,py+17+wave,CELL,3);
+}
+function drawTree(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#2a6a1a';c.beginPath();
+  c.arc(px+CELL/2,py+CELL/2-4,10,0,Math.PI*2);c.fill();
+  c.fillStyle='#3a8a2a';c.beginPath();
+  c.arc(px+CELL/2-3,py+CELL/2-8,8,0,Math.PI*2);c.fill();
+  c.fillStyle='#7a4a20';c.fillRect(px+CELL/2-2,py+CELL/2+6,4,8);
+}
+function roadConn(gx,gy,types){
+  let res={L:false,R:false,U:false,D:false};
+  // CROSSING counts as both road and rail neighbor
+  let eff=(t)=>types.includes(t)||(types.includes(T.ROAD)&&t===T.CROSSING)||(types.includes(T.RAIL)&&t===T.CROSSING);
+  if(gx>0&&eff(state.grid[gy][gx-1])) res.L=true;
+  if(gx<GRID-1&&eff(state.grid[gy][gx+1])) res.R=true;
+  if(gy>0&&eff(state.grid[gy-1][gx])) res.U=true;
+  if(gy<GRID-1&&eff(state.grid[gy+1][gx])) res.D=true;
+  return res;
+}
+function drawRoad(c,gx,gy,px,py){
+  let r=roadConn(gx,gy,[T.ROAD,T.BRIDGE_H,T.BRIDGE_V]);
+  const surf='#a09070', kerb='#807060', grass='#6ba84a', mark='#ffe8a0';
+  const CX=px+CELL/2, CY=py+CELL/2;
+  let nc=(r.L?1:0)+(r.R?1:0)+(r.U?1:0)+(r.D?1:0);
+
+  // Full tile road surface
+  c.fillStyle=surf; c.fillRect(px,py,CELL,CELL);
+
+  // Cut grass into the corners that have NO road going that way
+  // Corner size = half the tile so corners look natural
+  const CK=CELL/2;
+  c.fillStyle=grass;
+  if(!r.L&&!r.U){ // top-left grass triangle
+    c.beginPath(); c.moveTo(px,py); c.lineTo(px+CK,py); c.lineTo(px,py+CK); c.closePath(); c.fill();
+  }
+  if(!r.R&&!r.U){ // top-right grass triangle
+    c.beginPath(); c.moveTo(px+CELL,py); c.lineTo(px+CK,py); c.lineTo(px+CELL,py+CK); c.closePath(); c.fill();
+  }
+  if(!r.L&&!r.D){ // bottom-left grass triangle
+    c.beginPath(); c.moveTo(px,py+CELL); c.lineTo(px+CK,py+CELL); c.lineTo(px,py+CK); c.closePath(); c.fill();
+  }
+  if(!r.R&&!r.D){ // bottom-right grass triangle
+    c.beginPath(); c.moveTo(px+CELL,py+CELL); c.lineTo(px+CK,py+CELL); c.lineTo(px+CELL,py+CK); c.closePath(); c.fill();
+  }
+
+  // Kerb lines: thin dark line along each tile edge that is a boundary (not connecting)
+  c.strokeStyle=kerb; c.lineWidth=2; c.setLineDash([]);
+  if(!r.U){ c.beginPath(); c.moveTo(px,py+1); c.lineTo(px+CELL,py+1); c.stroke(); }
+  if(!r.D){ c.beginPath(); c.moveTo(px,py+CELL-1); c.lineTo(px+CELL,py+CELL-1); c.stroke(); }
+  if(!r.L){ c.beginPath(); c.moveTo(px+1,py); c.lineTo(px+1,py+CELL); c.stroke(); }
+  if(!r.R){ c.beginPath(); c.moveTo(px+CELL-1,py); c.lineTo(px+CELL-1,py+CELL); c.stroke(); }
+
+  // Center line: dashes on straights, arc on corners, nothing on junctions
+  let pure_h=r.L&&r.R&&!r.U&&!r.D;
+  let pure_v=r.U&&r.D&&!r.L&&!r.R;
+  let isCorner=(nc===2&&(r.L||r.R)&&(r.U||r.D));
+  c.strokeStyle=mark; c.lineWidth=2;
+  if(pure_h){
+    c.setLineDash([8,6]);
+    c.beginPath(); c.moveTo(px,CY); c.lineTo(px+CELL,CY); c.stroke();
+  } else if(pure_v){
+    c.setLineDash([8,6]);
+    c.beginPath(); c.moveTo(CX,py); c.lineTo(CX,py+CELL); c.stroke();
+  } else if(isCorner){
+    // Arc from edge midpoint to edge midpoint, center at inside corner
+    let acx,acy,aS,aE;
+    // Arc center is at the OUTSIDE corner — the corner the curve hugs
+    // R+D: curve hugs bottom-right → (px+CELL, py+CELL), arc sweeps top→left (PI to 3PI/2)
+    // L+D: curve hugs bottom-left  → (px,      py+CELL), arc sweeps right→top (3PI/2 to 2PI)
+    // L+U: curve hugs top-left     → (px,      py     ), arc sweeps bottom→right (0 to PI/2)  -- wait no
+    // Think of it differently: the arc connects midpoint of one connecting edge to midpoint of other
+    // R+D connects: right-edge-midpoint (px+CELL, CY) to bottom-edge-midpoint (CX, py+CELL)
+    //   → that arc bows toward bottom-right, center at (px+CELL, py+CELL), sweeps PI to 3PI/2
+    // L+D connects: left-edge-midpoint (px, CY) to bottom-edge-midpoint (CX, py+CELL)
+    //   → bows toward bottom-left, center at (px, py+CELL), sweeps 3PI/2 to 2PI
+    // L+U connects: left-edge-midpoint (px, CY) to top-edge-midpoint (CX, py)
+    //   → bows toward top-left, center at (px, py), sweeps 0 to PI/2
+    // R+U connects: right-edge-midpoint (px+CELL, CY) to top-edge-midpoint (CX, py)
+    //   → bows toward top-right, center at (px+CELL, py), sweeps PI/2 to PI
+    if(r.R&&r.D){ acx=px+CELL;  acy=py+CELL;  aS=Math.PI;     aE=3*Math.PI/2; }
+    else if(r.L&&r.D){ acx=px;       acy=py+CELL;  aS=3*Math.PI/2; aE=2*Math.PI; }
+    else if(r.L&&r.U){ acx=px;        acy=py;       aS=0;           aE=Math.PI/2; }
+    else             { acx=px+CELL;   acy=py;       aS=Math.PI/2;   aE=Math.PI; }
+    c.setLineDash([8,6]);
+    c.beginPath(); c.arc(acx,acy,CELL/2,aS,aE); c.stroke();
+  }
+  c.setLineDash([]);
+}
+function drawBridge(c,px,py,horizontal){
+  // Water underneath
+  drawWater(c,px,py);
+  let bx=px,by=py;
+  if(horizontal){
+    // Bridge deck
+    c.fillStyle='#8a7040';c.fillRect(bx,by+CELL/2-6,CELL,12);
+    // Road surface
+    c.fillStyle='#9a8050';c.fillRect(bx,by+CELL/2-4,CELL,8);
+    // Road markings
+    c.fillStyle='#ffe080';c.fillRect(bx+4,by+CELL/2-1,8,2);c.fillRect(bx+22,by+CELL/2-1,8,2);
+    // Railings/sides
+    c.fillStyle='#c0a060';
+    c.fillRect(bx,by+CELL/2-7,CELL,2);
+    c.fillRect(bx,by+CELL/2+5,CELL,2);
+    // Vertical supports
+    c.fillStyle='#705030';
+    c.fillRect(bx+5,by+CELL/2+7,4,CELL/2-7);
+    c.fillRect(bx+CELL-9,by+CELL/2+7,4,CELL/2-7);
+    // Cables
+    c.strokeStyle='#c0a060';c.lineWidth=1;
+    c.beginPath();c.moveTo(bx+7,by+CELL/2-7);c.lineTo(bx+CELL-7,by+CELL/2-7);c.stroke();
+  } else {
+    // Vertical bridge
+    c.fillStyle='#8a7040';c.fillRect(bx+CELL/2-6,by,12,CELL);
+    c.fillStyle='#9a8050';c.fillRect(bx+CELL/2-4,by,8,CELL);
+    c.fillStyle='#ffe080';c.fillRect(bx+CELL/2-1,by+4,2,8);c.fillRect(bx+CELL/2-1,by+22,2,8);
+    c.fillStyle='#c0a060';
+    c.fillRect(bx+CELL/2-7,by,2,CELL);
+    c.fillRect(bx+CELL/2+5,by,2,CELL);
+    c.fillStyle='#705030';
+    c.fillRect(bx+CELL/2+7,by+5,CELL/2-7,4);
+    c.fillRect(bx+CELL/2+7,by+CELL-9,CELL/2-7,4);
+    c.strokeStyle='#c0a060';c.lineWidth=1;
+    c.beginPath();c.moveTo(bx+CELL/2-7,by+7);c.lineTo(bx+CELL/2-7,by+CELL-7);c.stroke();
+  }
+}
+function drawRail(c,gx,gy,px,py){
+  let r=roadConn(gx,gy,[T.RAIL]);
+  const ballast='#7a6a5a', tie='#503a20', railCol='#c0b090', grass='#6ba84a';
+  const CX=px+CELL/2, CY=py+CELL/2;
+  let nc=(r.L?1:0)+(r.R?1:0)+(r.U?1:0)+(r.D?1:0);
+  let sh=r.L||r.R, sv=r.U||r.D;
+  let isCorner=(nc===2&&sh&&sv);
+  const RO=4; // rail offset from centre
+
+  // Grass base
+  c.fillStyle=grass; c.fillRect(px,py,CELL,CELL);
+
+  if(isCorner){
+    // Arc center = inside corner (tile corner NOT touched by either arm)
+    let acx,acy,aS,aE;
+    if(r.R&&r.D){ acx=px+CELL;  acy=py+CELL;  aS=Math.PI;     aE=3*Math.PI/2; }
+    else if(r.L&&r.D){ acx=px;       acy=py+CELL;  aS=3*Math.PI/2; aE=2*Math.PI; }
+    else if(r.L&&r.U){ acx=px;        acy=py;       aS=0;           aE=Math.PI/2; }
+    else             { acx=px+CELL;   acy=py;       aS=Math.PI/2;   aE=Math.PI; }
+
+    // Ballast band as filled arc annulus
+    c.fillStyle=ballast;
+    c.beginPath();
+    c.arc(acx,acy, CX-px+8, aS, aE);
+    c.arc(acx,acy, CX-px-8, aE, aS, true);
+    c.closePath(); c.fill();
+
+    // Sleeper ties radiating along arc
+    c.strokeStyle=tie; c.lineWidth=3; c.setLineDash([]);
+    for(let i=0;i<=8;i++){
+      let ang=aS+(aE-aS)*(i/8);
+      c.beginPath();
+      c.moveTo(acx+Math.cos(ang)*(CELL/2-8), acy+Math.sin(ang)*(CELL/2-8));
+      c.lineTo(acx+Math.cos(ang)*(CELL/2+8), acy+Math.sin(ang)*(CELL/2+8));
+      c.stroke();
+    }
+
+    // Twin rails as arcs
+    c.strokeStyle=railCol; c.lineWidth=2; c.setLineDash([]);
+    c.beginPath(); c.arc(acx,acy, CELL/2-RO, aS, aE); c.stroke();
+    c.beginPath(); c.arc(acx,acy, CELL/2+RO, aS, aE); c.stroke();
+
+  } else {
+    // Straight / T / X
+    // Ballast strip(s)
+    c.fillStyle=ballast;
+    if(sh) c.fillRect(px, CY-8, CELL, 16);
+    if(sv) c.fillRect(CX-8, py, 16, CELL);
+
+    // Sleeper ties
+    c.fillStyle=tie;
+    if(sh) for(let i=0;i<7;i++){ let x=px+3+i*(CELL-6)/6; c.fillRect(x,CY-9,3,18); }
+    if(sv) for(let i=0;i<7;i++){ let y=py+3+i*(CELL-6)/6; c.fillRect(CX-9,y,18,3); }
+
+    // Rails
+    c.fillStyle=railCol;
+    if(sh){
+      let x0=r.L?px:CX, x1=r.R?px+CELL:CX;
+      c.fillRect(x0,CY-RO-1,x1-x0,2);
+      c.fillRect(x0,CY+RO-1,x1-x0,2);
+    }
+    if(sv){
+      let y0=r.U?py:CY, y1=r.D?py+CELL:CY;
+      c.fillRect(CX-RO-1,y0,2,y1-y0);
+      c.fillRect(CX+RO-1,y0,2,y1-y0);
+    }
+  }
+}
+function drawCrossing(c,gx,gy,px,py){
+  // Draw road layer first, then rail on top, plus warning markings
+  drawRoad(c,gx,gy,px,py);
+  const railCol='#c0b090', tie='#503a20', warn='#ffcc00';
+  const CX=px+CELL/2, CY=py+CELL/2;
+
+  // Rail runs horizontal across road (standard level crossing orientation)
+  // Check actual neighbors to determine rail direction
+  let rR=roadConn(gx,gy,[T.RAIL]);
+  let isH=rR.L||rR.R||(!rR.U&&!rR.D);
+  let isV=rR.U||rR.D;
+
+  if(isH||(!isH&&!isV)){
+    // Horizontal ballast strip
+    c.fillStyle='#8a7a6a';
+    c.fillRect(px, CY-6, CELL, 12);
+    // Sleeper ties
+    c.fillStyle=tie;
+    for(let i=0;i<7;i++) c.fillRect(px+3+i*(CELL-6)/6, CY-7, 3, 14);
+    // Twin rails
+    c.fillStyle=railCol;
+    c.fillRect(px, CY-4, CELL, 2);
+    c.fillRect(px, CY+2, CELL, 2);
+    // Warning chevrons on road surface
+    c.fillStyle=warn;
+    c.fillRect(px+3,  CY-9,  8, 3);
+    c.fillRect(px+3,  CY+6,  8, 3);
+    c.fillRect(px+CELL-11, CY-9,  8, 3);
+    c.fillRect(px+CELL-11, CY+6,  8, 3);
+  } else {
+    // Vertical rail
+    c.fillStyle='#8a7a6a';
+    c.fillRect(CX-6, py, 12, CELL);
+    c.fillStyle=tie;
+    for(let i=0;i<7;i++) c.fillRect(CX-7, py+3+i*(CELL-6)/6, 14, 3);
+    c.fillStyle=railCol;
+    c.fillRect(CX-4, py, 2, CELL);
+    c.fillRect(CX+2, py, 2, CELL);
+    c.fillStyle=warn;
+    c.fillRect(CX-9,  py+3, 3, 8);
+    c.fillRect(CX+6,  py+3, 3, 8);
+    c.fillRect(CX-9,  py+CELL-11, 3, 8);
+    c.fillRect(CX+6,  py+CELL-11, 3, 8);
+  }
+
+  // Crossing warning sign (small X)
+  c.fillStyle='#cc2222';
+  c.fillRect(CX-1,CY-8,2,16);
+  c.save();c.translate(CX,CY);c.rotate(Math.PI/4);
+  c.fillRect(-1,-8,2,16);c.restore();
+}
+function drawPowerLine(c,gx,gy,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  let r=roadConn(gx,gy,[T.POWER,T.COAL,T.NUCLEAR,T.SOLAR]);
+  // Pole
+  c.fillStyle='#8a6a3a';c.fillRect(px+CELL/2-1,py+4,3,CELL-8);
+  // Crossbar
+  c.fillRect(px+CELL/2-8,py+6,16,3);
+  // Wires
+  c.strokeStyle='#cccc00';c.lineWidth=1;
+  if(r.L){c.beginPath();c.moveTo(px+CELL/2-8,py+9);c.lineTo(px,py+9);c.stroke();}
+  if(r.R){c.beginPath();c.moveTo(px+CELL/2+8,py+9);c.lineTo(px+CELL,py+9);c.stroke();}
+  if(r.U){c.beginPath();c.moveTo(px+CELL/2,py+9);c.lineTo(px+CELL/2,py);c.stroke();}
+  if(r.D){c.beginPath();c.moveTo(px+CELL/2,py+CELL-4);c.lineTo(px+CELL/2,py+CELL);c.stroke();}
+}
+function drawZone(c,px,py,col,label){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.strokeStyle=col;c.lineWidth=2;
+  c.strokeRect(px+2,py+2,CELL-4,CELL-4);
+  c.fillStyle=col+'44';c.fillRect(px+2,py+2,CELL-4,CELL-4);
+  c.fillStyle=col;c.font='bold 15px VT323';c.textAlign='center';
+  c.fillText(label,px+CELL/2,py+CELL/2+5);
+}
+// ── RESIDENTIAL ──
+function drawCottage(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  // Small stone cottage
+  c.fillStyle='#c8b48a';c.fillRect(px+6,py+22,28,18);
+  c.fillStyle='#8a3a1a';// red roof
+  c.beginPath();c.moveTo(px+3,py+22);c.lineTo(px+20,py+10);c.lineTo(px+37,py+22);c.closePath();c.fill();
+  c.fillStyle='#d4c090';c.fillRect(px+8,py+22,8,8);c.fillRect(px+24,py+22,8,8); // windows
+  c.fillStyle='#6a3010';c.fillRect(px+15,py+32,10,8); // door
+  c.fillStyle='#888';c.fillRect(px+17,py+14,6,8); // chimney
+}
+function drawHouse(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  // Suburban house with garage
+  c.fillStyle='#e0d0b0';c.fillRect(px+4,py+16,32,24);
+  c.fillStyle='#c84020';// pitched roof
+  c.beginPath();c.moveTo(px+2,py+16);c.lineTo(px+20,py+4);c.lineTo(px+38,py+16);c.closePath();c.fill();
+  c.fillStyle='#d0c080';c.fillRect(px+7,py+20,8,7);c.fillRect(px+22,py+20,8,7); // windows
+  c.fillStyle='#7a4a20';c.fillRect(px+15,py+30,10,10); // door
+  c.fillStyle='#aaa';c.fillRect(px+4,py+28,8,12); // garage door
+  c.fillStyle='#888';c.fillRect(px+28,py+8,4,8); // chimney
+}
+function drawBigHouse(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  // Two-story house
+  c.fillStyle='#e8d8c0';c.fillRect(px+3,py+10,34,30);
+  c.fillStyle='#a03018';
+  c.beginPath();c.moveTo(px+1,py+10);c.lineTo(px+20,py+1);c.lineTo(px+39,py+10);c.closePath();c.fill();
+  c.fillStyle='#ffe090'; // lit windows
+  for(let r=0;r<2;r++) for(let col2=0;col2<3;col2++) c.fillRect(px+5+col2*12,py+13+r*13,8,7);
+  c.fillStyle='#5a3010';c.fillRect(px+15,py+30,10,10);
+  c.fillStyle='#666';c.fillRect(px+25,py+3,4,7);
+}
+function drawApartment(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.RAPT)) return;
+  let W=CELL*2,H=CELL*2;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,W,H);
+  // Low-rise apartment block
+  c.fillStyle='#4a7a9a';c.fillRect(px+4,py+H/2-4,W-8,H/2+4);
+  c.fillStyle='#3a6a8a';c.fillRect(px+4,py+8,W-8,H/2-12);
+  // Flat roof
+  c.fillStyle='#2a4a5a';c.fillRect(px+4,py+6,W-8,4);
+  // Grid of windows
+  c.fillStyle='#d0f0ff88';
+  for(let r=0;r<4;r++) for(let col2=0;col2<5;col2++) c.fillRect(px+8+col2*15,py+12+r*16,10,9);
+  // Ground floor doors
+  c.fillStyle='#8a6040';
+  c.fillRect(px+W/2-8,py+H-14,16,14);
+  c.fillStyle='#aaa';c.fillRect(px+8,py+H-14,12,14);c.fillRect(px+W-20,py+H-14,12,14);
+  // Label
+  c.fillStyle='#fff';c.font='bold 11px VT323';c.textAlign='center';
+  c.fillText('APT',px+W/2,py+H/2+2);
+}
+function drawTower(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.RTOWER)) return;
+  let W=CELL*2,H=CELL*2;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,W,H);
+  // High-rise glass tower
+  c.fillStyle='#2a5a7a';c.fillRect(px+8,py+4,W-16,H-8);
+  // Glass panels
+  c.fillStyle='#6ab0d088';
+  for(let r=0;r<7;r++) for(let col2=0;col2<3;col2++) c.fillRect(px+10+col2*22,py+6+r*11,18,8);
+  // Rooftop
+  c.fillStyle='#1a3a5a';c.fillRect(px+8,py+2,W-16,4);
+  c.fillStyle='#888';c.fillRect(px+W/2-1,py,3,4); // antenna
+  // Entrance
+  c.fillStyle='#4a8ab0';c.fillRect(px+W/2-10,py+H-12,20,12);
+  c.fillStyle='#fff';c.font='bold 10px VT323';c.textAlign='center';
+  c.fillText('TOWER',px+W/2,py+H/2+2);
+}
+// ── COMMERCIAL ──
+function drawShop(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#5a7ab0';c.fillRect(px+3,py+10,34,30);
+  c.fillStyle='#334466';c.fillRect(px+3,py+8,34,4);
+  c.fillStyle='#aaddff';c.fillRect(px+5,py+14,30,12); // shop window
+  c.fillStyle='#ffaa00';c.fillRect(px+6,py+26,28,5); // awning
+  c.fillStyle='#222';c.font='10px VT323';c.textAlign='center';c.fillText('SHOP',px+20,py+24);
+  c.fillStyle='#5a3010';c.fillRect(px+14,py+31,12,9);
+}
+function drawCafe(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#c07840';c.fillRect(px+3,py+12,34,28);
+  c.fillStyle='#8a4820';c.fillRect(px+3,py+10,34,4);
+  c.fillStyle='#ffe8a0';c.fillRect(px+6,py+15,28,10); // window
+  c.fillStyle='#cc4400';c.fillRect(px+5,py+25,6,5);c.fillRect(px+16,py+25,6,5);c.fillRect(px+27,py+25,6,5); // chairs
+  c.fillStyle='#222';c.font='10px VT323';c.textAlign='center';c.fillText('CAFE',px+20,py+23);
+  c.fillStyle='#5a3010';c.fillRect(px+14,py+32,12,8);
+}
+function drawOffice(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#6a8ab0';c.fillRect(px+2,py+4,36,36);
+  c.fillStyle='#4a6a90';c.fillRect(px+2,py+2,36,4);
+  c.fillStyle='#cce8ff88';
+  for(let r=0;r<3;r++) for(let col2=0;col2<3;col2++) c.fillRect(px+4+col2*12,py+7+r*10,9,7);
+  c.fillStyle='#222';c.font='9px VT323';c.textAlign='center';c.fillText('OFFICE',px+20,py+37);
+  c.fillStyle='#4a6080';c.fillRect(px+13,py+32,14,8);
+}
+function drawMall(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.CMALL)) return;
+  let W=CELL*2,H=CELL*2;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,W,H);
+  c.fillStyle='#8a7ab0';c.fillRect(px+4,py+H/3,W-8,H*2/3);
+  c.fillStyle='#6a5a90';c.fillRect(px+4,py+H/3-4,W-8,8); // overhang
+  // Glass atrium
+  c.fillStyle='#cce0ff99';c.fillRect(px+W/2-16,py+8,32,H/3-4);
+  c.fillStyle='#c0b0e0';c.fillRect(px+4,py+H-16,W/2-8,16); // anchor store L
+  c.fillStyle='#b0a0d0';c.fillRect(px+W/2+4,py+H-16,W/2-8,16); // anchor store R
+  // Signs
+  c.fillStyle='#ffcc00';c.fillRect(px+8,py+H/3+4,W-16,8);
+  c.fillStyle='#111';c.font='bold 11px VT323';c.textAlign='center';
+  c.fillText('MALL',px+W/2,py+H/3+11);
+  // Parking stripes
+  c.fillStyle='#fff4';
+  for(let i=0;i<5;i++) c.fillRect(px+6+i*15,py+H-5,10,3);
+}
+function drawSkyscraper(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.CSKY)) return;
+  let W=CELL*2,H=CELL*2;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,W,H);
+  // Glass skyscraper
+  let grad=ctx.createLinearGradient(px,py,px+W,py);
+  grad.addColorStop(0,'#4a7aaa');grad.addColorStop(0.5,'#8ab0d8');grad.addColorStop(1,'#4a7aaa');
+  c.fillStyle=grad;c.fillRect(px+6,py+4,W-12,H-4);
+  // Window grid
+  c.fillStyle='#d0eeff88';
+  for(let r=0;r<8;r++) for(let col2=0;col2<4;col2++) c.fillRect(px+8+col2*18,py+6+r*9,14,6);
+  // Setbacks
+  c.fillStyle='#3a6a9a';c.fillRect(px+10,py+2,W-20,4);
+  c.fillStyle='#2a5a8a';c.fillRect(px+14,py,W-28,3);
+  c.fillStyle='#ccc';c.fillRect(px+W/2-1,py,3,2); // spire
+  c.fillStyle='#eee';c.font='9px VT323';c.textAlign='center';
+  c.fillText('SKY',px+W/2,py+H*0.6);
+}
+// ── INDUSTRIAL ──
+function drawSmoke(c,px,py,stackX,stackY){
+  let st=smokeTime*0.6;
+  let off=((st*0.4+px*0.01)%1)*14;
+  let a=0.3+0.15*Math.sin(st*1.1);
+  c.fillStyle=`rgba(110,110,110,${a})`;
+  c.beginPath();c.arc(stackX,stackY-off,3+off*0.25,0,Math.PI*2);c.fill();
+}
+function drawWorkshop(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#c08a50';c.fillRect(px+2,py+18,36,22);
+  // Shed roof
+  c.fillStyle='#7a5030';c.fillRect(px+2,py+14,36,6);
+  c.fillStyle='#8a6040';c.fillRect(px+2,py+12,36,4);
+  c.fillStyle='#888';c.fillRect(px+8,py+8,6,12); // small chimney
+  drawSmoke(c,px,py,px+11,py+8);
+  c.fillStyle='#ddd';c.fillRect(px+4,py+22,12,8); // roller door
+  c.fillStyle='#b8906a';c.fillRect(px+22,py+22,12,8); // window
+}
+function drawFactory(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#a06830';c.fillRect(px+2,py+14,36,26);
+  c.fillStyle='#555';c.fillRect(px+6,py+4,8,14); // chimney 1
+  c.fillStyle='#444';c.fillRect(px+22,py+8,6,10); // chimney 2
+  drawSmoke(c,px,py,px+10,py+4);
+  drawSmoke(c,px,py,px+25,py+8);
+  c.fillStyle='#d4a070';c.fillRect(px+2,py+14,36,5); // roof band
+  c.fillStyle='#ddd';c.fillRect(px+4,py+22,10,8);c.fillRect(px+22,py+22,10,8); // windows
+  c.fillStyle='#8a6040';c.fillRect(px+13,py+28,14,12);
+}
+function drawWarehouse(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#9a7a50';c.fillRect(px+1,py+8,38,32);
+  // Barrel/arched roof
+  c.fillStyle='#7a5a30';c.fillRect(px+1,py+6,38,4);
+  c.fillStyle='#555';c.fillRect(px+28,py+2,5,8); // chimney
+  drawSmoke(c,px,py,px+30,py+2);
+  // Loading bays
+  c.fillStyle='#444';c.fillRect(px+2,py+22,12,18);c.fillRect(px+16,py+22,12,18);
+  c.fillStyle='#ccc';c.fillRect(px+3,py+23,10,6);c.fillRect(px+17,py+23,10,6); // roller doors
+}
+function drawIndustrialPlant(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.IPLANT)) return;
+  let W=CELL*2,H=CELL*2;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,W,H);
+  c.fillStyle='#806020';c.fillRect(px+4,py+H/3,W-8,H*2/3-4);
+  c.fillStyle='#604010';c.fillRect(px+4,py+H/3-4,W-8,8);
+  // Multiple chimneys
+  for(let i=0;i<4;i++){
+    c.fillStyle='#3a3a3a';c.fillRect(px+8+i*20,py+6,10,H/3-4);
+    drawSmoke(c,px,py,px+13+i*20,py+6);
+  }
+  // Tank
+  c.fillStyle='#707070';c.beginPath();c.arc(px+W*0.7,py+H*0.65,18,0,Math.PI*2);c.fill();
+  c.fillStyle='#555';c.beginPath();c.arc(px+W*0.7,py+H*0.65,18,Math.PI,0);c.fill();
+  c.fillStyle='#222';c.font='10px VT323';c.textAlign='center';
+  c.fillText('PLANT',px+W/2,py+H*0.85);
+}
+// ── TRAIN STATION ──
+function drawTrainStation(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.TRAIN_STATION)) return;
+  let W=CELL*2,H=CELL*2;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,W,H);
+  // Platform (grey)
+  c.fillStyle='#b0a090';c.fillRect(px+4,py+H/2+4,W-8,H/2-8);
+  // Station building
+  c.fillStyle='#c8b48a';c.fillRect(px+8,py+8,W-16,H/2);
+  // Arched roof
+  c.fillStyle='#8a3a10';c.fillRect(px+8,py+6,W-16,6);
+  // Clock tower
+  c.fillStyle='#a09070';c.fillRect(px+W/2-6,py+2,12,8);
+  c.fillStyle='#ffe0a0';c.beginPath();c.arc(px+W/2,py+6,5,0,Math.PI*2);c.fill();
+  c.fillStyle='#333';c.font='8px VT323';c.textAlign='center';c.fillText('12',px+W/2,py+8);
+  // Windows
+  c.fillStyle='#aaccff88';
+  for(let i=0;i<3;i++) c.fillRect(px+10+i*20,py+14,14,12);
+  // Rail lines on platform
+  c.fillStyle='#888';c.fillRect(px+4,py+H*0.65,W-8,2);c.fillRect(px+4,py+H*0.75,W-8,2);
+  c.fillStyle='#aaa';for(let i=0;i<6;i++) c.fillRect(px+6+i*12,py+H*0.63,4,16);
+  // Sign
+  c.fillStyle='#cc2200';c.fillRect(px+W/2-16,py+H/2-4,32,8);
+  c.fillStyle='#fff';c.font='bold 9px VT323';c.textAlign='center';
+  c.fillText('STATION',px+W/2,py+H/2+3);
+  // Entrance
+  c.fillStyle='#6a4020';c.fillRect(px+W/2-8,py+H/2+4,16,12);
+}
+function isTL(gx,gy,type){
+  let sz=getMultiSize(type);
+  if(sz<=1) return true;
+  // A tile is top-left of its building if it is at column-0 and row-0 within its sz×sz footprint.
+  // Determine column within building: walk left counting same-type tiles, mod sz
+  let col=0;
+  let cx=gx-1;
+  while(cx>=0 && state.grid[gy][cx]===type && col<sz-1){ col++; cx--; }
+  // col now = how many same-type tiles are to our left (up to sz-1)
+  // But we need to know if those tiles are part of the same building or a neighbor building.
+  // Key insight: if col === sz-1, we might be at col sz-1 of a building OR col 0 of a new building
+  // after sz tiles of the previous one. We resolve by checking: is (cx+1) a true TL itself?
+  // Simplest robust approach: just count consecutive same-type tiles to the left, capped at sz.
+  // If count >= 1 AND count < sz → definitely interior column → not TL
+  // If count === 0 → could be TL (no left neighbor of same type)
+  // If count >= sz → we're exactly sz away from a previous building's start → we ARE a new TL
+  let leftCount=0;
+  cx=gx-1;
+  while(cx>=0 && state.grid[gy][cx]===type){ leftCount++; cx--; }
+  if(leftCount>0 && leftCount%sz!==0) return false; // interior column
+
+  let topCount=0;
+  let cy=gy-1;
+  while(cy>=0 && state.grid[cy][gx]===type){ topCount++; cy--; }
+  if(topCount>0 && topCount%sz!==0) return false; // interior row
+
+  return true;
+}
+function drawPowerPlant(c,gx,gy,px,py,dark,light,label){
+  if(!isTL(gx,gy,state.grid[gy][gx])) return;
+  c.fillStyle=dark;c.fillRect(px,py,CELL*2,CELL*2);
+  c.fillStyle=light;c.fillRect(px+4,py+4,CELL*2-8,CELL*2-8);
+  // Cooling towers
+  c.fillStyle='#aaa';
+  c.beginPath();c.arc(px+20,py+50,12,Math.PI,0);c.fill();
+  c.beginPath();c.arc(px+CELL+16,py+50,12,Math.PI,0);c.fill();
+  // Smoke
+  c.fillStyle='rgba(200,200,200,0.4)';
+  c.beginPath();c.arc(px+20,py+48-(animFrame%8)*2,6,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(px+CELL+16,py+48-(animFrame%8)*2,6,0,Math.PI*2);c.fill();
+  c.fillStyle='#fff';c.font='bold 13px VT323';c.textAlign='center';
+  c.fillText(label,px+CELL,py+28);
+}
+function drawSolarFarm(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.SOLAR)) return;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL*2,CELL*2);
+  c.fillStyle='#2244aa';
+  for(let dy=0;dy<4;dy++) for(let dx=0;dx<4;dx++){
+    c.fillRect(px+4+dx*19,py+4+dy*19,16,16);
+    c.strokeStyle='#4466cc';c.lineWidth=1;
+    c.strokeRect(px+4+dx*19,py+4+dy*19,16,16);
+  }
+  c.fillStyle='rgba(255,255,100,0.1)';c.fillRect(px,py,CELL*2,CELL*2);
+}
+function drawWind(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#8a9aaa';c.fillRect(px+CELL/2-1,py+8,3,CELL-16);
+  // Blades
+  let ang=(animFrame*0.05)%(Math.PI*2);
+  c.fillStyle='#c0d0e0';
+  for(let i=0;i<3;i++){
+    let a=ang+i*(Math.PI*2/3);
+    c.save();c.translate(px+CELL/2,py+16);c.rotate(a);
+    c.fillRect(-2,-14,4,14);c.restore();
+  }
+}
+function drawOilRig(c,px,py){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#555';c.fillRect(px+8,py+8,24,CELL-16);
+  c.fillStyle='#888';c.fillRect(px+12,py+4,16,8);
+  c.fillStyle='#f80';c.fillRect(px+18,py+4,4,10);
+  c.fillStyle='rgba(255,80,0,0.6)';c.beginPath();c.arc(px+20,py+3,3,0,Math.PI*2);c.fill();
+}
+function drawService(c,px,py,col,label){
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle=col;c.fillRect(px+4,py+8,32,CELL-12);
+  c.fillStyle='#fff';c.fillRect(px+8,py+4,24,6);
+  c.fillStyle=col;c.font='bold 12px VT323';c.textAlign='center';
+  c.fillText(label,px+20,py+4);
+  // Cross
+  c.fillStyle='#fff';c.fillRect(px+16,py+16,8,16);c.fillRect(px+12,py+20,16,8);
+}
+function drawUniversity(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.UNIVERSITY)) return;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL*2,CELL*2);
+  c.fillStyle='#8a5a2a';c.fillRect(px+4,py+CELL/2,CELL*2-8,CELL);
+  // Columns
+  c.fillStyle='#e0d0a0';
+  for(let i=0;i<4;i++) c.fillRect(px+8+i*18,py+CELL/2,6,CELL);
+  // Pediment
+  c.fillStyle='#c0b080';
+  c.beginPath();c.moveTo(px+4,py+CELL/2);
+  c.lineTo(px+CELL,py+CELL/4);c.lineTo(px+CELL*2-4,py+CELL/2);
+  c.closePath();c.fill();
+  c.fillStyle='#fff';c.font='bold 11px VT323';c.textAlign='center';
+  c.fillText('UNIV',px+CELL,py+CELL*0.85);
+}
+function drawStadium(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.STADIUM)) return;
+  c.fillStyle='#6ba84a';c.fillRect(px,py,CELL*2,CELL*2);
+  c.fillStyle='#4a3a6a';c.beginPath();
+  c.arc(px+CELL,py+CELL,CELL-4,0,Math.PI*2);c.fill();
+  c.fillStyle='#2a8a2a';c.beginPath();
+  c.arc(px+CELL,py+CELL,CELL-12,0,Math.PI*2);c.fill();
+  c.fillStyle='#5a5a8a';c.beginPath();
+  c.arc(px+CELL,py+CELL,CELL-8,0,Math.PI*2);c.fill();
+  c.fillStyle='#2a8a2a';c.beginPath();
+  c.arc(px+CELL,py+CELL,CELL-14,0,Math.PI*2);c.fill();
+}
+function drawAirport(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.AIRPORT)) return;
+  let W=CELL*3,H=CELL*3;
+  c.fillStyle='#555050';c.fillRect(px,py,W,H);
+  // Runway H
+  c.fillStyle='#444040';c.fillRect(px,py+H/2-10,W,20);
+  c.fillStyle='#ffe080';
+  for(let i=0;i<6;i++) c.fillRect(px+10+i*22,py+H/2-2,12,4);
+  // Runway V
+  c.fillStyle='#444040';c.fillRect(px+W/2-10,py,20,H);
+  c.fillStyle='#ffe080';
+  for(let i=0;i<6;i++) c.fillRect(px+W/2-2,py+10+i*22,4,12);
+  // Terminal
+  c.fillStyle='#888080';c.fillRect(px+W/2-18,py+H/2-18,36,36);
+  c.fillStyle='#aaa';c.fillRect(px+W/2-14,py+H/2-14,28,28);
+  c.fillStyle='#fff';c.font='bold 11px VT323';c.textAlign='center';
+  c.fillText('✈',px+W/2,py+H/2+4);
+  // Lights
+  if(animFrame%20<10){
+    c.fillStyle='#ff4444';
+    c.beginPath();c.arc(px+4,py+4,3,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(px+W-4,py+4,3,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(px+4,py+H-4,3,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(px+W-4,py+H-4,3,0,Math.PI*2);c.fill();
+  }
+}
+function drawPort(c,gx,gy,px,py){
+  if(!isTL(gx,gy,T.PORT)) return;
+  c.fillStyle='#2a5a8a';c.fillRect(px,py,CELL*2,CELL*2);
+  // Dock
+  c.fillStyle='#6a4a20';c.fillRect(px+4,py+CELL,CELL*2-8,8);
+  c.fillRect(px+4,py+CELL+16,CELL*2-8,8);
+  // Crane
+  c.fillStyle='#aaa';c.fillRect(px+CELL-2,py+4,4,CELL-8);
+  c.fillRect(px+CELL-20,py+4,24,4);
+  c.strokeStyle='#888';c.lineWidth=1;
+  c.beginPath();c.moveTo(px+CELL-20,py+8);c.lineTo(px+CELL-4,py+CELL-8);c.stroke();
+  // Ship
+  c.fillStyle='#cc4400';c.fillRect(px+6,py+CELL+24,28,12);
+  c.fillStyle='#ffaa00';c.fillRect(px+16,py+CELL+16,8,12);
+}
+function drawRubble(c,px,py){
+  c.fillStyle='#7a6a5a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#6a5a4a';
+  for(let i=0;i<6;i++) c.fillRect(px+3+i*6,py+4+(i%3)*8,5+i%3,3+i%2);
+  // Smoke
+  if(animFrame%6<3){
+    c.fillStyle='rgba(150,100,50,0.4)';
+    c.beginPath();c.arc(px+12,py+8,5,0,Math.PI*2);c.fill();
+  }
+}
+function drawHighway(c,gx,gy,px,py){
+  c.fillStyle='#b8a878';c.fillRect(px,py,CELL,CELL);
+  // Determine orientation: left/right edges → vertical road, top/bottom → horizontal
+  // Check if this highway tile is on left/right edge (gx near 0 or GRID-1)
+  let isVert=(gx<=1||gx>=GRID-2);
+  c.fillStyle='#fff';
+  if(isVert){
+    // Vertical highway (left/right edges) — lanes run up/down
+    c.fillRect(px+CELL/2-1,py,2,CELL); // center divider
+    c.fillStyle='#ffe8a0';
+    for(let y2=py+2;y2<py+CELL-2;y2+=10){
+      c.fillRect(px+CELL/4-1,y2,2,6);
+      c.fillRect(px+3*CELL/4-1,y2,2,6);
+    }
+    c.fillStyle='#fff';
+    c.fillRect(px,py,2,CELL);c.fillRect(px+CELL-2,py,2,CELL);
+    // Sign
+    c.fillStyle='#006600';c.fillRect(px+CELL/2-8,py+CELL/2-5,16,10);
+    c.fillStyle='#fff';c.font='8px VT323';c.textAlign='center';
+    c.fillText('HWY',px+CELL/2,py+CELL/2+3);
+    c.fillStyle='#ffcc00';c.font='10px VT323';
+    c.fillText(gx<=1?'◀':'▶',px+CELL/2,py+CELL/2+13);
+  } else {
+    // Horizontal highway (top/bottom edges) — lanes run left/right
+    c.fillRect(px,py+CELL/2-1,CELL,2); // center divider
+    c.fillStyle='#ffe8a0';
+    for(let x2=px+2;x2<px+CELL-2;x2+=10){
+      c.fillRect(x2,py+CELL/4-1,6,2);
+      c.fillRect(x2,py+3*CELL/4-1,6,2);
+    }
+    c.fillStyle='#fff';
+    c.fillRect(px,py,CELL,2);c.fillRect(px,py+CELL-2,CELL,2);
+    // Sign
+    c.fillStyle='#006600';c.fillRect(px+CELL/2-8,py+CELL/2-5,16,10);
+    c.fillStyle='#fff';c.font='8px VT323';c.textAlign='center';
+    c.fillText('HWY',px+CELL/2,py+CELL/2+3);
+    c.fillStyle='#ffcc00';c.font='10px VT323';
+    c.fillText(gy<=1?'▲':'▼',px+CELL/2,py+CELL/2+13);
+  }
+}
+
+function drawSeaway(c,px,py,gx,gy){
+  drawWater(c,px,py);
+  let isVert=(gx!==undefined&&(gx<=1||gx>=GRID-2));
+  if(isVert){
+    // Vertical channel (left/right edges) — buoys top/bottom
+    c.fillStyle='#ff4400';c.beginPath();c.arc(px+CELL/2,py+8,4,0,Math.PI*2);c.fill();
+    c.fillStyle='#00aa00';c.beginPath();c.arc(px+CELL/2,py+CELL-8,4,0,Math.PI*2);c.fill();
+    c.strokeStyle='#ffffff66';c.lineWidth=2;c.setLineDash([6,6]);
+    c.beginPath();c.moveTo(px,py+CELL/2);c.lineTo(px+CELL,py+CELL/2);c.stroke();
+  } else {
+    // Horizontal channel (top/bottom edges) — buoys left/right
+    c.fillStyle='#ff4400';c.beginPath();c.arc(px+8,py+CELL/2,4,0,Math.PI*2);c.fill();
+    c.fillStyle='#00aa00';c.beginPath();c.arc(px+CELL-8,py+CELL/2,4,0,Math.PI*2);c.fill();
+    c.strokeStyle='#ffffff66';c.lineWidth=2;c.setLineDash([6,6]);
+    c.beginPath();c.moveTo(px+CELL/2,py);c.lineTo(px+CELL/2,py+CELL);c.stroke();
+  }
+  c.setLineDash([]);
+  c.fillStyle='#fff8';c.font='14px sans-serif';c.textAlign='center';
+  c.fillText('⚓',px+CELL/2,py+CELL/2+5);
+}
+
+function drawPark(c,px,py){
+  c.fillStyle='#4aaa4a';c.fillRect(px,py,CELL,CELL);
+  c.fillStyle='#1a5a1a';c.beginPath();
+  c.arc(px+CELL/2-4,py+CELL/2-4,8,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(px+CELL/2+4,py+CELL/2+2,7,0,Math.PI*2);c.fill();
+  c.fillStyle='#603a1a';c.fillRect(px+CELL/2-5,py+CELL/2+7,3,8);
+  c.fillRect(px+CELL/2+2,py+CELL/2+4,3,8);
+}
+function drawFire(gx,gy){
+  let px=gx*CELL,py=gy*CELL;
+  // fireTime is a slow continuous float updated each frame at 0.015/frame
+  let t=fireTime+(gx*0.37+gy*0.53); // offset per tile so fires flicker independently
+  let flicker=Math.sin(t*2.1)*0.5+0.5;        // 0..1, slow sine
+  let flicker2=Math.sin(t*1.7+1.0)*0.5+0.5;
+
+  // Base glow — large, slow pulsing ember underneath
+  let baseR=10+flicker*4;
+  let bg=ctx.createRadialGradient(px+CELL/2,py+CELL/2+2,1,px+CELL/2,py+CELL/2+2,baseR+6);
+  bg.addColorStop(0,'rgba(255,80,0,0.55)');
+  bg.addColorStop(1,'rgba(180,20,0,0)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2+2,baseR+6,0,Math.PI*2);ctx.fill();
+
+  // Flame tongues — 5 flames, each offset by tile coords for variety
+  for(let i=0;i<5;i++){
+    let phase=t*1.3+i*1.26+gx*0.1;
+    let sway=Math.sin(phase)*4;
+    let ht=8+Math.sin(phase*0.9)*4+flicker*3;
+    let fx=px+CELL/2+sway+((i-2)*5);
+    let fy=py+CELL/2+4;
+    let alpha=0.55+flicker2*0.3;
+    // inner hot yellow
+    let fg=ctx.createRadialGradient(fx,fy-ht*0.3,0,fx,fy,ht);
+    fg.addColorStop(0,`rgba(255,240,80,${alpha})`);
+    fg.addColorStop(0.4,`rgba(255,120,0,${alpha*0.8})`);
+    fg.addColorStop(1,'rgba(200,30,0,0)');
+    ctx.fillStyle=fg;
+    ctx.beginPath();
+    ctx.ellipse(fx,fy-ht*0.4,4+flicker,ht,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // Bright hot core
+  let cr=5+flicker*2;
+  let cg2=ctx.createRadialGradient(px+CELL/2,py+CELL/2,0,px+CELL/2,py+CELL/2,cr+4);
+  cg2.addColorStop(0,'rgba(255,255,200,0.9)');
+  cg2.addColorStop(0.5,'rgba(255,180,40,0.7)');
+  cg2.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=cg2;ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,cr+4,0,Math.PI*2);ctx.fill();
+
+  // Smoke rising above fire — slow upward drift
+  let sr=fireTime*0.4+(gx*0.17+gy*0.23);
+  for(let j=0;j<3;j++){
+    let rise=((sr*0.5+j*0.33)%1)*20;
+    let sx=px+CELL/2+Math.sin(sr+j*2)*5;
+    let sy=py+CELL/2-8-rise;
+    let sa=0.18*(1-rise/20);
+    if(sa>0.01){
+      ctx.fillStyle=`rgba(80,80,80,${sa})`;
+      ctx.beginPath();ctx.arc(sx,sy,3+rise*0.25,0,Math.PI*2);ctx.fill();
+    }
+  }
+}
+
+// ---- VEHICLES ----
+function drawVehicle(v){
+  ctx.save();
+  if(v.type==='car'){
+    ctx.save();
+    ctx.translate(v.x,v.y);
+    let ang=v.dx!==0?(v.dx>0?0:Math.PI):(v.dy>0?Math.PI/2:-Math.PI/2);
+    ctx.rotate(ang);
+    let cw=12,ch=7;
+    ctx.fillStyle=v.color;
+    ctx.fillRect(-cw/2,-ch/2,cw,ch);
+    // Windscreen
+    ctx.fillStyle='#88ccff99';
+    ctx.fillRect(-cw/2+1,-ch/2+1,cw/2-1,ch-2);
+    // Headlights
+    ctx.fillStyle='#ffffaa';
+    ctx.fillRect(cw/2-2,-ch/2+1,2,2);
+    ctx.fillRect(cw/2-2, ch/2-3,2,2);
+    // Tail lights
+    ctx.fillStyle='#ff3333';
+    ctx.fillRect(-cw/2,-ch/2+1,2,2);
+    ctx.fillRect(-cw/2, ch/2-3,2,2);
+    // Brake lights when stopped
+    if(v.stopped){
+      ctx.fillStyle='rgba(255,0,0,0.8)';
+      ctx.fillRect(-cw/2-1,-ch/2,3,ch);
+    }
+    ctx.restore();
+  } else if(v.type==='plane'){
+    ctx.save();
+    ctx.translate(v.x,v.y);
+    let angle=Math.atan2(v.dy,v.dx);
+    ctx.rotate(angle);
+    let s=v.crashing?0.7:1.0;
+    ctx.scale(s,s);
+    // Body
+    ctx.fillStyle='#e0e0e0';ctx.fillRect(-18,-4,36,8);
+    // Wings
+    ctx.fillStyle='#c0c0c0';
+    ctx.beginPath();ctx.moveTo(-4,-4);ctx.lineTo(4,-20);ctx.lineTo(12,-4);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(-4,4);ctx.lineTo(4,20);ctx.lineTo(12,4);ctx.closePath();ctx.fill();
+    // Tail
+    ctx.beginPath();ctx.moveTo(-14,-4);ctx.lineTo(-18,-14);ctx.lineTo(-10,-4);ctx.closePath();ctx.fill();
+    // Windows
+    ctx.fillStyle='#88aaff';
+    for(let i=0;i<3;i++) ctx.fillRect(-6+i*6,-3,4,4);
+    // Nose
+    ctx.fillStyle='#ff8800';ctx.fillRect(16,-2,4,4);
+    if(v.crashing){
+      ctx.fillStyle='rgba(255,100,0,0.8)';
+      ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  } else { // heli
+    ctx.save();
+    ctx.translate(v.x,v.y);
+    // Body
+    ctx.fillStyle='#448844';ctx.fillRect(-14,-6,28,12);
+    ctx.fillStyle='#336633';ctx.fillRect(-6,-10,12,4);
+    // Rotor
+    let ra=(animFrame*0.3)%(Math.PI*2);
+    ctx.strokeStyle='#aaa';ctx.lineWidth=2;
+    ctx.save();ctx.rotate(ra);
+    ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(18,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(0,18);ctx.stroke();
+    ctx.restore();
+    // Tail
+    ctx.fillStyle='#448844';ctx.fillRect(14,-3,12,3);
+    // Tail rotor
+    ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(26,-6);ctx.lineTo(26,4);ctx.stroke();
+    if(v.crashing){
+      ctx.fillStyle='rgba(255,100,0,0.7)';
+      ctx.beginPath();ctx.arc(0,0,18,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// ---- MONSTERS ----
+function drawMonster(m){
+  ctx.save();
+  ctx.translate(m.x,m.y);
+  let bob=Math.sin(m.frame*0.15)*3;
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();
+  ctx.ellipse(0,28,20,8,0,0,Math.PI*2);ctx.fill();
+  // Body
+  ctx.fillStyle=m.color||'#4a8a2a';
+  ctx.fillRect(-16,bob-24,32,32);
+  // Head
+  ctx.fillRect(-12,bob-44,24,24);
+  // Horns
+  ctx.fillStyle='#8a2a2a';
+  ctx.beginPath();ctx.moveTo(-10,bob-44);ctx.lineTo(-14,bob-56);ctx.lineTo(-6,bob-44);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(10,bob-44);ctx.lineTo(14,bob-56);ctx.lineTo(6,bob-44);ctx.closePath();ctx.fill();
+  // Eyes
+  ctx.fillStyle='#ff0000';
+  ctx.beginPath();ctx.arc(-5,bob-36,4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(5,bob-36,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffff00';
+  ctx.beginPath();ctx.arc(-5,bob-36,2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(5,bob-36,2,0,Math.PI*2);ctx.fill();
+  // Arms
+  ctx.fillStyle=m.color||'#4a8a2a';
+  ctx.fillRect(-28,bob-18,12,20);ctx.fillRect(16,bob-18,12,20);
+  // Legs
+  ctx.fillRect(-12,bob+6,10,20);ctx.fillRect(2,bob+6,10,20);
+  // Claws
+  ctx.fillStyle='#8a2a2a';
+  ctx.fillRect(-32,bob+2,6,8);ctx.fillRect(26,bob+2,6,8);
+  // HP bar
+  ctx.fillStyle='#333';ctx.fillRect(-20,-60+bob,40,5);
+  ctx.fillStyle='#0f0';ctx.fillRect(-20,-60+bob,40*(m.hp/300),5);
+  ctx.restore();
+}
+
+// ---- MINIMAP ----
+function drawMinimap(){
+  let sz=160;
+  let s=sz/GRID;
+  mctx.clearRect(0,0,sz,sz);
+  for(let gy=0;gy<GRID;gy++) for(let gx=0;gx<GRID;gx++){
+    let t=state.grid[gy][gx];
+    let mc=COLORS[t];
+    if(!mc){ if(t===T.RAPT||t===T.RTOWER) mc='#2a6a8a';
+             else if(t===T.CMALL||t===T.CSKY) mc='#5a5aa0';
+             else if(t===T.IPLANT) mc='#806020';
+             else if(t===T.TRAIN_STATION) mc='#6a5a4a';
+             else mc='#6ba84a'; }
+    mctx.fillStyle=mc;
+    mctx.fillRect(gx*s,gy*s,s+0.5,s+0.5);
+  }
+  mctx.fillStyle='#ff4400';
+  for(let f of fires) mctx.fillRect(f.gx*s,f.gy*s,Math.max(2,s*2),Math.max(2,s*2));
+  mctx.fillStyle='#ff00ff';
+  for(let m of monsters) mctx.fillRect(m.x/CELL*s-2,m.y/CELL*s-2,4,4);
+  mctx.strokeStyle='#f0c040';mctx.lineWidth=1;
+  mctx.strokeRect(
+    (vx/CELL)*s,(vy/CELL)*s,
+    (canvas.width/CELL)*s,(canvas.height/CELL)*s
+  );
+}
+
+function updateTradeCityList(){
+  let el=document.getElementById('trade-city-list');
+  if(!el||!npcCities) return;
+  el.innerHTML=npcCities.map(c=>{
+    let icon=c.type==='seaway'?'⚓':'🛣';
+    let ctrl=c.controlled==='player'?'👤':'🤖';
+    let col=c.controlled==='player'?'#006600':'#884400';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:1px 0;border-bottom:1px solid #c8b48a55;">
+      <span>${icon}${ctrl} <b>${c.name}</b></span>
+      <span style="font-size:11px;color:${col}">${c.tradeGood}</span>
+    </div>`;
+  }).join('');
+}
+function updateStats(){
+  let fundsStr='$'+state.funds.toLocaleString();
+  document.getElementById('st-funds').textContent=fundsStr;
+  document.getElementById('st-pop').textContent=state.pop.toLocaleString();
+  document.getElementById('st-year').textContent=state.year;
+  document.getElementById('st-approval').textContent=state.approval+'%';
+  document.getElementById('st-power').textContent=state.powerProd+'/'+state.powerCons;
+  let ds=document.getElementById('st-disaster');
+  updateTradeCityList();
+  if(fires.length>0||monsters.length>0){
+    let parts=[];
+    if(fires.length>0) parts.push('🔥 '+fires.length+' FIRE'+(fires.length>1?'S':''));
+    if(monsters.length>0) parts.push('👾 MONSTER!');
+    ds.style.display='inline';ds.textContent=parts.join(' ');
+  } else {
+    ds.style.display='none';
+  }
+}
+
+let msgTimeout=null;
+function showMsg(text){
+  let el=document.getElementById('msg');
+  el.textContent=text;el.style.display='block';
+  if(msgTimeout) clearTimeout(msgTimeout);
+  msgTimeout=setTimeout(()=>{el.style.display='none';},3000);
+}
+
+// ============================================================
+// INPUT
+// ============================================================
+canvas.addEventListener('mousedown',e=>{
+  // Don't start drag if any modal panel is open
+  if(document.getElementById('graphs-panel').style.display==='block') return;
+  if(document.getElementById('budget-panel').style.display==='block') return;
+  if(e.button===1||e.button===2){
+    isPanning=true;panStartX=e.clientX;panStartY=e.clientY;panVX=vx;panVY=vy;
+    e.preventDefault();
+  } else if(e.button===0){
+    isDragging=true;dragBtn=0;lastDragCell={gx:-1,gy:-1};
+    handleClick(e);
+  }
+});
+canvas.addEventListener('click',e=>{
+  if(document.getElementById('graphs-panel').style.display==='block') return;
+  if(currentTool==='' || e.shiftKey){
+    let canvasX=e.clientX-160, canvasY=e.clientY-36;
+    let gx=Math.floor((canvasX+vx)/CELL), gy=Math.floor((canvasY+vy)/CELL);
+    showTileInfo(gx,gy);
+  }
+});
+canvas.addEventListener('mousemove',e=>{
+  if(isPanning){
+    vx=panVX-(e.clientX-panStartX);
+    vy=panVY-(e.clientY-panStartY);
+    clampViewport();
+  } else if(isDragging){
+    handleClick(e);
+  }
+  // Always track hover tile for build preview
+  let canvasX=e.clientX-160, canvasY=e.clientY-36;
+  hoverGX=Math.floor((canvasX+vx)/CELL);
+  hoverGY=Math.floor((canvasY+vy)/CELL);
+});
+canvas.addEventListener('mouseleave',()=>{ hoverGX=-1; hoverGY=-1; });
+// Listen on document so mouseup is caught even if cursor leaves the canvas or window
+document.addEventListener('mouseup',e=>{
+  if(e.button===1||e.button===2) isPanning=false;
+  else { isDragging=false; isMiniDrag=false; }
+});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+// Also cancel drags if window loses focus (e.g. alt-tab)
+window.addEventListener('blur',()=>{ isDragging=false; isPanning=false; isMiniDrag=false; });
+canvas.addEventListener('wheel',e=>{
+  vx+=e.deltaX;vy+=e.deltaY;clampViewport();
+},{passive:true});
+document.addEventListener('keydown',e=>{
+  let step=CELL*3;
+  if(e.key==='ArrowLeft') vx-=step;
+  if(e.key==='ArrowRight') vx+=step;
+  if(e.key==='ArrowUp') vy-=step;
+  if(e.key==='ArrowDown') vy+=step;
+  clampViewport();
+});
+function clampViewport(){
+  vx=Math.max(0,Math.min(GRID*CELL-canvas.width,vx));
+  vy=Math.max(0,Math.min(GRID*CELL-canvas.height,vy));
+}
+function handleClick(e){
+  if(document.getElementById('graphs-panel').style.display==='block') return;
+  if(document.getElementById('budget-panel').style.display==='block') return;
+  // Canvas is offset: left panel 160px, top bar 36px
+  let canvasX=e.clientX-160;
+  let canvasY=e.clientY-36;
+  let gx=Math.floor((canvasX+vx)/CELL);
+  let gy=Math.floor((canvasY+vy)/CELL);
+  if(gx===lastDragCell.gx&&gy===lastDragCell.gy) return;
+  lastDragCell={gx,gy};
+  placeTile(gx,gy);
+}
+
+// Minimap navigation
+miniCanvas.addEventListener('mousedown',e=>{isMiniDrag=true;miniNavTo(e);});
+document.addEventListener('mousemove',e=>{if(isMiniDrag)miniNavTo(e);});
+function miniNavTo(e){
+  let r=miniCanvas.getBoundingClientRect();
+  let mx=e.clientX-r.left, my=e.clientY-r.top;
+  mx=Math.max(0,Math.min(160,mx));
+  my=Math.max(0,Math.min(160,my));
+  let s=GRID*CELL/160;
+  vx=mx*s-canvas.width/2;
+  vy=my*s-canvas.height/2;
+  clampViewport();
+}
+
+// ============================================================
+// RCI DEMAND BAR
+// ============================================================
+function updateRCI(){
+  let needs=[];
+  document.getElementById('rci-r').style.width=state.demandR+'%';
+  document.getElementById('rci-c').style.width=state.demandC+'%';
+  document.getElementById('rci-i').style.width=state.demandI+'%';
+  if(state.demandR>70) needs.push('🏠 Need housing');
+  if(state.demandC>70) needs.push('🏪 Need shops');
+  if(state.demandI>70) needs.push('🏭 Need industry');
+  if(state.powerProd<state.powerCons) needs.push('⚡ Need power!');
+  if(countType([T.POLICE])===0&&state.pop>50) needs.push('🚔 Need police');
+  if(countType([T.FIRE_ST])===0&&state.pop>50) needs.push('🚒 Need fire stn');
+  document.getElementById('rci-needs').textContent=needs.join('  ·  ');
+}
+
+// ============================================================
+// OVERLAY MAPS
+// ============================================================
+function computeOverlayMaps(){
+  let sz=GRID;
+  state.pollutionMap=new Float32Array(sz*sz);
+  state.crimeMap=new Float32Array(sz*sz);
+  state.landValMap=new Float32Array(sz*sz);
+  state.powerMap=new Uint8Array(sz*sz);
+
+  // Pollution: industrial tiles emit, spreads outward
+  for(let y=0;y<sz;y++) for(let x=0;x<sz;x++){
+    let t=state.grid[y][x];
+    let src=0;
+    if(t===T.I1||t===T.COAL||t===T.OIL) src=80;
+    if(t===T.I2) src=60;
+    if(t===T.I3) src=50;
+    if(t===T.NUCLEAR) src=20;
+    if(src>0){
+      for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++){
+        let nx=x+dx,ny=y+dy;
+        if(nx<0||ny<0||nx>=sz||ny>=sz) continue;
+        let d=Math.sqrt(dx*dx+dy*dy);
+        state.pollutionMap[ny*sz+nx]=Math.min(100,state.pollutionMap[ny*sz+nx]+src*Math.max(0,1-d/5));
+      }
+    }
+  }
+  // Crime: spreads from areas without police coverage
+  for(let y=0;y<sz;y++) for(let x=0;x<sz;x++){
+    let hasPol=serviceNear(x,y,T.POLICE,8);
+    let t=state.grid[y][x];
+    let base=(t>=T.R1&&t<=T.I3)?40:10;
+    state.crimeMap[y*sz+x]=hasPol?Math.max(0,base-30):base;
+  }
+  // Land value: parks/water nearby = high, industry/crime = low
+  for(let y=0;y<sz;y++) for(let x=0;x<sz;x++){
+    let v=50;
+    if(serviceNear(x,y,T.PARK,4)) v+=20;
+    if(hasAdjacentType(x,y,[T.WATER])) v+=15;
+    if(serviceNear(x,y,T.SCHOOL,6)) v+=10;
+    v-=state.pollutionMap[y*sz+x]*0.3;
+    v-=state.crimeMap[y*sz+x]*0.2;
+    state.landValMap[y*sz+x]=Math.max(0,Math.min(100,v));
+  }
+  // Power: reuse powered set from growZones (simplified)
+  // Mark powered tiles
+  for(let y=0;y<sz;y++) for(let x=0;x<sz;x++){
+    let t=state.grid[y][x];
+    let isPwr=t===T.COAL||t===T.OIL||t===T.NUCLEAR||t===T.SOLAR||t===T.WIND||t===T.POWER||
+              t===T.ROAD||t===T.RAIL||t===T.BRIDGE_H||t===T.BRIDGE_V;
+    state.powerMap[y*sz+x]=isPwr?1:0;
+  }
+  if(currentView!=='normal') renderOverlay(currentView);
+}
+
+function setView(v){
+  currentView=v;
+  let views=['normal','power','crime','pollution','landval'];
+  views.forEach(id=>{
+    let btn=document.getElementById('vb-'+id);
+    if(btn) btn.classList.toggle('active',id===v);
+  });
+  let oc=document.getElementById('overlay-canvas');
+  if(v==='normal'){oc.style.display='none';}
+  else{oc.style.display='block';renderOverlay(v);}
+}
+
+function renderOverlay(v){
+  let oc=document.getElementById('overlay-canvas');
+  oc.width=canvas.width;oc.height=canvas.height;
+  oc.style.left=canvas.offsetLeft+'px';
+  oc.style.top=canvas.offsetTop+'px';
+  let oc2=oc.getContext('2d');
+  oc2.clearRect(0,0,oc.width,oc.height);
+  let startGX=Math.max(0,Math.floor(vx/CELL));
+  let startGY=Math.max(0,Math.floor(vy/CELL));
+  let endGX=Math.min(GRID,Math.ceil((vx+oc.width)/CELL)+1);
+  let endGY=Math.min(GRID,Math.ceil((vy+oc.height)/CELL)+1);
+  if(!state.pollutionMap) return;
+  for(let gy=startGY;gy<endGY;gy++) for(let gx=startGX;gx<endGX;gx++){
+    let px=gx*CELL-vx, py=gy*CELL-vy;
+    let idx=gy*GRID+gx;
+    let val,color;
+    if(v==='pollution'){
+      val=state.pollutionMap[idx]/100;
+      color=`rgba(${Math.floor(180*val)},${Math.floor(60*val)},0,${val*0.75})`;
+    } else if(v==='crime'){
+      val=state.crimeMap[idx]/100;
+      color=`rgba(${Math.floor(200*val)},0,${Math.floor(50*val)},${val*0.7})`;
+    } else if(v==='landval'){
+      val=state.landValMap[idx]/100;
+      color=`rgba(0,${Math.floor(200*val)},${Math.floor(80*val)},${val*0.65})`;
+    } else if(v==='power'){
+      let t=state.grid[gy][gx];
+      let isPwr=t===T.COAL||t===T.OIL||t===T.NUCLEAR||t===T.SOLAR||t===T.WIND;
+      color=isPwr?'rgba(255,220,0,0.5)':'rgba(50,50,50,0.3)';
+    }
+    if(color){oc2.fillStyle=color;oc2.fillRect(px,py,CELL,CELL);}
+  }
+  // Legend
+  oc2.fillStyle='rgba(20,12,4,0.85)';oc2.fillRect(8,8,130,24);
+  oc2.font='12px VT323';
+  let legends={pollution:'🟠 Pollution — orange=high',crime:'🔴 Crime — red=high',
+    landval:'🟢 Land Value — green=high',power:'🟡 Power — yellow=source'};
+  oc2.fillStyle='#e8d5a3';oc2.fillText(legends[v]||'',12,24);
+}
+
+// ============================================================
+// TILE INFO PANEL (click on map tile)
+// ============================================================
+let infoMode=false;
+function showTileInfo(gx,gy){
+  if(gx<0||gy<0||gx>=GRID||gy>=GRID) return;
+  let t=state.grid[gy][gx];
+  let tNames={0:'Empty',1:'Road',2:'Power Line',3:'Railway',
+    10:'Residential Zone',11:'Commercial Zone',12:'Industrial Zone',
+    13:'House (Lv1)',14:'House (Lv2)',15:'House (Lv3)',
+    16:'Shop (Lv1)',17:'Shop (Lv2)',18:'Shop (Lv3)',
+    19:'Factory (Lv1)',20:'Factory (Lv2)',21:'Factory (Lv3)',
+    30:'Coal Plant',31:'Oil Plant',32:'Nuclear Plant',33:'Solar Farm',34:'Wind Turbine',
+    40:'Police Station',41:'Fire Station',42:'Hospital',43:'School',44:'University',45:'Stadium',
+    50:'Park',51:'Fountain',52:'Tree',60:'Water',61:'Bridge (H)',62:'Bridge (V)',
+    70:'Rubble',80:'Seaport',81:'Airport'};
+  let name=tNames[t]||('Tile #'+t);
+  let idx=gy*GRID+gx;
+  let rows=[];
+  rows.push(['Location',`(${gx}, ${gy})`]);
+  if(state.pollutionMap) rows.push(['Pollution',Math.round(state.pollutionMap[idx])+'%']);
+  if(state.crimeMap)     rows.push(['Crime',Math.round(state.crimeMap[idx])+'%']);
+  if(state.landValMap)   rows.push(['Land Value','$'+Math.round(state.landValMap[idx]*100)]);
+  let hasPower=serviceNear(gx,gy,T.COAL,30)||serviceNear(gx,gy,T.SOLAR,30)||
+               serviceNear(gx,gy,T.NUCLEAR,30)||serviceNear(gx,gy,T.WIND,30);
+  rows.push(['Power',hasPower?'✓ Connected':'✗ No power']);
+  let ip=document.getElementById('info-panel');
+  document.getElementById('info-title').textContent=name;
+  document.getElementById('info-body').innerHTML=rows.map(r=>
+    `<div class="ip-row"><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join('');
+  ip.style.display='block';
+}
+
+// ============================================================
+// GRAPHS
+// ============================================================
+function openGraphs(){
+  document.getElementById('graphs-panel').style.display='block';
+  drawGraph(currentGraph);
+}
+function showGraph(which){
+  currentGraph=which;
+  document.querySelectorAll('.gtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().startsWith(which.replace('pop','pop').replace('funds','fund').replace('approval','approv').replace('power','power'))));
+  drawGraph(which);
+}
+function drawGraph(which){
+  let gc=document.getElementById('graphs-canvas');
+  let gx=gc.getContext('2d');
+  let W=gc.width,H=gc.height;
+  gx.clearRect(0,0,W,H);
+  gx.fillStyle='#1a1208';gx.fillRect(0,0,W,H);
+  let data=state.history[which]||[];
+  if(data.length<2){
+    gx.fillStyle='#a89472';gx.font='16px VT323';
+    gx.fillText('Play for a year to see data!',W/2-80,H/2);return;
+  }
+  let labels={pop:'Population',funds:'Funds ($)',approval:'Approval (%)',power:'Power Produced'};
+  let colors={pop:'#6ddc6d',funds:'#f0c040',approval:'#6db8dc',power:'#dc9c4d'};
+  let col=colors[which]||'#e8d5a3';
+  let min=Math.min(...data),max=Math.max(...data);
+  if(min===max){min=0;max=max||1;}
+  let pad=20;
+  // Grid lines
+  gx.strokeStyle='#333';gx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    let y=pad+(H-2*pad)*(1-i/4);
+    gx.beginPath();gx.moveTo(pad,y);gx.lineTo(W-pad,y);gx.stroke();
+    gx.fillStyle='#a89472';gx.font='11px VT323';
+    let v=min+(max-min)*(i/4);
+    gx.fillText(which==='funds'?'$'+Math.round(v/1000)+'k':Math.round(v),(W-pad+2),y+4);
+  }
+  // Line
+  gx.strokeStyle=col;gx.lineWidth=2;gx.beginPath();
+  data.forEach((v,i)=>{
+    let x=pad+(W-2*pad-20)*i/(data.length-1);
+    let y=pad+(H-2*pad)*(1-(v-min)/(max-min));
+    i===0?gx.moveTo(x,y):gx.lineTo(x,y);
+  });
+  gx.stroke();
+  // Dots
+  gx.fillStyle=col;
+  data.forEach((v,i)=>{
+    let x=pad+(W-2*pad-20)*i/(data.length-1);
+    let y=pad+(H-2*pad)*(1-(v-min)/(max-min));
+    gx.beginPath();gx.arc(x,y,3,0,Math.PI*2);gx.fill();
+  });
+  // Title
+  gx.fillStyle='#e8d5a3';gx.font='14px VT323';
+  gx.fillText(labels[which]||which,pad,pad-4);
+  gx.fillStyle='#a89472';gx.font='11px VT323';
+  gx.fillText('Years 1-'+data.length,W-pad-60,pad-4);
+}
+
+// ============================================================
+// NPC CITIES + TRADE
+// ============================================================
+const NPC_NAMES=['Ironport','Coalvale','Greenwich','Northhaven','Westshore',
+  'Millford','Ridgeton','Bayview','Duskfall','Ashmore'];
+const TRADE_GOODS=['Ore','Grain','Timber','Oil','Electronics','Textiles','Coal','Fish'];
+
+function spawnNpcCities(){
+  npcCities=[];
+  // One NPC city per highway exit + one per seaway exit
+  let usedNames=[...NPC_NAMES].sort(()=>Math.random()-0.5);
+  let idx=0;
+  if(state._hwPos) for(let h of state._hwPos){
+    if(idx>=usedNames.length) break;
+    let good=TRADE_GOODS[Math.floor(Math.random()*TRADE_GOODS.length)];
+    // World coords of connection point
+    let wx,wy;
+    if(h.edge==='top'){wx=(h.pos+0.5)*CELL;wy=0;}
+    else if(h.edge==='bottom'){wx=(h.pos+0.5)*CELL;wy=(GRID-0.5)*CELL;}
+    else if(h.edge==='left'){wx=0;wy=(h.pos+0.5)*CELL;}
+    else{wx=(GRID-0.5)*CELL;wy=(h.pos+0.5)*CELL;}
+    npcCities.push({name:usedNames[idx++],edge:h.edge,pos:h.pos,
+      controlled:'npc',type:'highway',tradeGood:good,x:wx,y:wy,
+      tradeTimer:0,active:true});
+  }
+  if(state._swPos) for(let s of state._swPos){
+    if(idx>=usedNames.length) break;
+    let good=TRADE_GOODS[Math.floor(Math.random()*TRADE_GOODS.length)];
+    let wx,wy;
+    if(s.edge==='top'){wx=(s.pos+0.5)*CELL;wy=0;}
+    else if(s.edge==='bottom'){wx=(s.pos+0.5)*CELL;wy=(GRID-0.5)*CELL;}
+    else if(s.edge==='left'){wx=0;wy=(s.pos+0.5)*CELL;}
+    else{wx=(GRID-0.5)*CELL;wy=(s.pos+0.5)*CELL;}
+    npcCities.push({name:usedNames[idx++],edge:s.edge,pos:s.pos,
+      controlled:'npc',type:'seaway',tradeGood:good,x:wx,y:wy,
+      tradeTimer:0,active:true});
+  }
+}
+
+function updateTradeRoutes(){
+  // NPC cities auto-spawn trade vehicles toward city center periodically
+  for(let city of npcCities){
+    if(!city.active) continue;
+    city.tradeTimer++;
+    let interval=city.controlled==='npc'?300:200;
+    if(city.tradeTimer>=interval && state.pop>20){
+      city.tradeTimer=0;
+      // Spawn trade vehicle
+      let targetX=GRID*CELL/2+( Math.random()-0.5)*CELL*20;
+      let targetY=GRID*CELL/2+( Math.random()-0.5)*CELL*20;
+      tradeRoutes.push({
+        type:city.type==='seaway'?'ship':'truck',
+        x:city.x, y:city.y,
+        tx:targetX, ty:targetY,
+        cityName:city.name,
+        tradeGood:city.tradeGood,
+        speed:city.type==='seaway'?1.2:2.0,
+        life:1200,
+        returning:false,
+        controlled:city.controlled
+      });
+    }
+  }
+  // Move trade vehicles
+  for(let i=tradeRoutes.length-1;i>=0;i--){
+    let tr=tradeRoutes[i];
+    tr.life--;
+    if(tr.life<=0){tradeRoutes.splice(i,1);continue;}
+    let ddx=tr.tx-tr.x, ddy=tr.ty-tr.y;
+    let dist=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(dist<tr.speed*3){
+      if(!tr.returning){
+        // Arrived — deliver trade bonus
+        state.funds+=Math.floor(50+Math.random()*100);
+        tr.returning=true;
+        // Head back to edge
+        let edge=npcCities.find(c=>c.name===tr.cityName);
+        if(edge){tr.tx=edge.x;tr.ty=edge.y;}
+        else{tradeRoutes.splice(i,1);}
+      } else {
+        tradeRoutes.splice(i,1);
+      }
+    } else {
+      tr.x+=ddx/dist*tr.speed;
+      tr.y+=ddy/dist*tr.speed;
+    }
+  }
+}
+
+function drawTradeVehicles(){
+  for(let tr of tradeRoutes){
+    let px=tr.x-vx, py=tr.y-vy;
+    if(px<-30||py<-30||px>canvas.width+30||py>canvas.height+30) continue;
+    ctx.save();
+    ctx.translate(tr.x,tr.y);
+    let ang=Math.atan2(tr.ty-tr.y,tr.tx-tr.x);
+    ctx.rotate(ang);
+    if(tr.type==='ship'){
+      // Simple boat shape
+      ctx.fillStyle='#e8d090';
+      ctx.beginPath();
+      ctx.moveTo(16,0);ctx.lineTo(-10,-7);ctx.lineTo(-14,0);ctx.lineTo(-10,7);ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle='#cc4400';ctx.fillRect(-8,-2,10,4); // hull stripe
+      ctx.fillStyle='#888';ctx.fillRect(-4,-8,3,8); // mast
+      ctx.fillStyle='#e0e0e0';ctx.beginPath();ctx.moveTo(-4,-8);ctx.lineTo(8,-3);ctx.lineTo(-4,-3);ctx.closePath();ctx.fill(); // sail
+      // Trade label
+      ctx.rotate(-ang);
+      ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(-20,-22,40,11);
+      ctx.fillStyle='#fff';ctx.font='9px VT323';ctx.textAlign='center';
+      ctx.fillText(tr.cityName,0,-13);
+    } else {
+      // Truck
+      ctx.fillStyle=tr.controlled==='player'?'#4488ff':'#cc6600';
+      ctx.fillRect(-12,-5,24,10);
+      ctx.fillStyle='#fff8';ctx.fillRect(6,-4,8,8); // cab window
+      ctx.fillStyle='#333';ctx.beginPath();ctx.arc(-6,5,3,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(6,5,3,0,Math.PI*2);ctx.fill();
+      // Label
+      ctx.rotate(-ang);
+      ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(-22,-18,44,11);
+      ctx.fillStyle='#fff';ctx.font='9px VT323';ctx.textAlign='center';
+      ctx.fillText(tr.cityName,0,-9);
+    }
+    ctx.restore();
+  }
+  // Draw edge city labels
+  drawEdgeCityLabels();
+}
+
+function drawEdgeCityLabels(){
+  const LW=90, LH=26; // label width/height
+  for(let city of npcCities){
+    let wx=city.x-vx, wy=city.y-vy;
+    // For edge cities, snap label to the appropriate screen edge
+    let lx,ly;
+    if(city.edge==='top'){
+      lx=Math.max(4,Math.min(canvas.width-LW-4,wx-LW/2));
+      ly=4;
+    } else if(city.edge==='bottom'){
+      lx=Math.max(4,Math.min(canvas.width-LW-4,wx-LW/2));
+      ly=canvas.height-LH-4;
+    } else if(city.edge==='left'){
+      lx=4;
+      ly=Math.max(4,Math.min(canvas.height-LH-4,wy-LH/2));
+    } else { // right
+      lx=canvas.width-LW-4;
+      ly=Math.max(4,Math.min(canvas.height-LH-4,wy-LH/2));
+    }
+    // Only draw if the connection point is within a reasonable range on the perpendicular axis
+    let inRange;
+    if(city.edge==='top'||city.edge==='bottom') inRange=(wx>-20&&wx<canvas.width+20);
+    else inRange=(wy>-20&&wy<canvas.height+20);
+    if(!inRange) continue;
+
+    ctx.save();
+    // Background box
+    ctx.fillStyle='rgba(20,12,4,0.88)';
+    ctx.fillRect(lx,ly,LW,LH);
+    ctx.strokeStyle=city.controlled==='player'?'#88ffaa':'#ffcc44';
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(lx,ly,LW,LH);
+    // City name
+    ctx.fillStyle=city.controlled==='player'?'#88ffaa':'#ffcc44';
+    ctx.font='bold 11px VT323';ctx.textAlign='left';
+    let icon=city.type==='seaway'?'⚓':'🛣';
+    ctx.fillText(icon+' '+city.name,lx+4,ly+11);
+    // Trade good + arrow pointing offscreen
+    ctx.fillStyle='#b8a878';
+    ctx.font='10px VT323';
+    ctx.fillText(city.tradeGood,lx+4,ly+22);
+    // Arrow pointing toward edge
+    let arrowChar={top:'▲',bottom:'▼',left:'◀',right:'▶'}[city.edge];
+    ctx.fillStyle='#ffcc44';ctx.textAlign='right';
+    ctx.fillText(arrowChar,lx+LW-3,ly+22);
+    ctx.restore();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// DISASTER CAMERA + MUSIC
+// ============================================================
+function panCameraTo(worldX, worldY, durationMs){
+  // Smoothly pan viewport so worldX,worldY is centered
+  let targetVX=worldX-canvas.width/2;
+  let targetVY=worldY-canvas.height/2;
+  targetVX=Math.max(0,Math.min(GRID*CELL-canvas.width,targetVX));
+  targetVY=Math.max(0,Math.min(GRID*CELL-canvas.height,targetVY));
+  let startVX=vx, startVY=vy;
+  let start=performance.now();
+  function step(now){
+    let t=Math.min(1,(now-start)/durationMs);
+    // Ease out cubic
+    let e=1-Math.pow(1-t,3);
+    vx=startVX+(targetVX-startVX)*e;
+    vy=startVY+(targetVY-startVY)*e;
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function flashDisasterOverlay(color){
+  let el=document.getElementById('disaster-flash');
+  el.style.background=color;
+  el.style.opacity='0.6';
+  setTimeout(()=>{ el.style.transition='opacity 0.8s'; el.style.opacity='0'; },200);
+  setTimeout(()=>{ el.style.transition=''; },1200);
+}
+
+function playDisasterMusic(type){
+  try{
+    let a=getAudio();
+    let now=a.currentTime;
+    if(type==='fire'){
+      // Low drone + rising alarm
+      let o1=a.createOscillator(),g1=a.createGain();
+      o1.type='sawtooth';o1.frequency.setValueAtTime(55,now);
+      o1.frequency.exponentialRampToValueAtTime(110,now+2.5);
+      g1.gain.setValueAtTime(0,now);g1.gain.linearRampToValueAtTime(0.06,now+0.3);
+      g1.gain.setValueAtTime(0.06,now+2);g1.gain.linearRampToValueAtTime(0,now+3);
+      o1.connect(g1);g1.connect(dest());o1.start(now);o1.stop(now+3);
+      // Alarm oscillation
+      for(let i=0;i<6;i++){
+        let o2=a.createOscillator(),g2=a.createGain();
+        o2.type='square';
+        o2.frequency.setValueAtTime(880,now+i*0.4);
+        o2.frequency.setValueAtTime(660,now+i*0.4+0.2);
+        g2.gain.setValueAtTime(0.05,now+i*0.4);g2.gain.exponentialRampToValueAtTime(0.001,now+i*0.4+0.38);
+        o2.connect(g2);g2.connect(dest());o2.start(now+i*0.4);o2.stop(now+i*0.4+0.4);
+      }
+    } else if(type==='monster'){
+      // Deep ominous bass + dissonant stabs
+      let freqs=[40,41,60,80,55,44];
+      freqs.forEach((f,i)=>{
+        let o=a.createOscillator(),g=a.createGain(),dist=a.createWaveShaper();
+        let curve=new Float32Array(256);
+        for(let j=0;j<256;j++) curve[j]=Math.tanh((j/128-1)*6);
+        dist.curve=curve;
+        o.type='sawtooth';o.frequency.value=f;
+        g.gain.setValueAtTime(0,now+i*0.4);
+        g.gain.linearRampToValueAtTime(0.07,now+i*0.4+0.1);
+        g.gain.exponentialRampToValueAtTime(0.001,now+i*0.4+0.7);
+        o.connect(dist);dist.connect(g);g.connect(dest());
+        o.start(now+i*0.4);o.stop(now+i*0.4+0.8);
+      });
+      // Thunder rumble
+      let buf=a.createBuffer(1,a.sampleRate*2.5,a.sampleRate);
+      let d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.8))*Math.sin(i*0.003);
+      let src=a.createBufferSource(),g3=a.createGain(),f3=a.createBiquadFilter();
+      f3.type='lowpass';f3.frequency.value=200;
+      src.buffer=buf;src.connect(f3);f3.connect(g3);g3.connect(dest());
+      g3.gain.setValueAtTime(0.5,now);g3.gain.exponentialRampToValueAtTime(0.001,now+2.5);
+      src.start(now);
+    } else if(type==='crash'){
+      // Jet whine descending + impact boom
+      let o=a.createOscillator(),g=a.createGain();
+      o.type='sawtooth';
+      o.frequency.setValueAtTime(2000,now);
+      o.frequency.exponentialRampToValueAtTime(200,now+1.2);
+      g.gain.setValueAtTime(0.07,now);g.gain.exponentialRampToValueAtTime(0.001,now+1.2);
+      o.connect(g);g.connect(dest());o.start(now);o.stop(now+1.2);
+      // Impact boom
+      let buf=a.createBuffer(1,a.sampleRate*1.5,a.sampleRate);
+      let d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(a.sampleRate*0.3));
+      let src=a.createBufferSource(),g2=a.createGain(),f2=a.createBiquadFilter();
+      f2.type='lowpass';f2.frequency.value=400;
+      src.buffer=buf;src.connect(f2);f2.connect(g2);g2.connect(dest());
+      g2.gain.setValueAtTime(0.6,now+1.0);g2.gain.exponentialRampToValueAtTime(0.001,now+2.5);
+      src.start(now+1.0);
+    }
+  } catch(e){}
+}
+
+// ============================================================
+// BUDGET
+// ============================================================
+function calcBudget(){
+  let resPop=0,comPop=0,indPop=0;
+  for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++){
+    let t=state.grid[y][x];
+    if(t===T.R1) resPop+=20; else if(t===T.R2) resPop+=40; else if(t===T.R3) resPop+=70;
+    else if(t===T.RAPT&&isTL(x,y,T.RAPT)) resPop+=200;
+    else if(t===T.RTOWER&&isTL(x,y,T.RTOWER)) resPop+=500;
+    else if(t===T.C1||t===T.C2||t===T.C3) comPop+=8;
+    else if(t===T.CMALL&&isTL(x,y,T.CMALL)) comPop+=30;
+    else if(t===T.CSKY&&isTL(x,y,T.CSKY)) comPop+=80;
+    else if(t===T.I1||t===T.I2||t===T.I3) indPop+=6;
+    else if(t===T.IPLANT&&isTL(x,y,T.IPLANT)) indPop+=40;
+  }
+  let taxR=state.taxRes/100, taxC=state.taxCom/100, taxI=state.taxInd/100;
+  let revRes=Math.floor(resPop*2.5*taxR);
+  let revCom=Math.floor(comPop*4*taxC);
+  let revInd=Math.floor(indPop*3*taxI);
+  let revenue=revRes+revCom+revInd;
+
+  let policeBase=countType([T.POLICE])*300;
+  let fireBase=countType([T.FIRE_ST])*300;
+  let healthBase=(countType([T.HOSPITAL])*400);
+  let eduBase=(countType([T.SCHOOL])*250+countType([T.UNIVERSITY])*600);
+  let roadsBase=Math.floor((countType([T.ROAD,T.BRIDGE_H,T.BRIDGE_V])+countType([T.RAIL]))*2);
+
+  let spPolice=Math.floor(policeBase*state.spPolice/100);
+  let spFire=Math.floor(fireBase*state.spFire/100);
+  let spHealth=Math.floor(healthBase*state.spHealth/100);
+  let spEdu=Math.floor(eduBase*state.spEdu/100);
+  let spRoads=Math.floor(roadsBase*state.spRoads/100);
+  let spending=spPolice+spFire+spHealth+spEdu+spRoads;
+
+  return {revenue,spending,net:revenue-spending,
+          revRes,revCom,revInd,
+          spPolice,spFire,spHealth,spEdu,spRoads,
+          policeBase,fireBase,healthBase,eduBase,roadsBase};
+}
+
+function openBudget(){
+  // Sync sliders from state
+  ['res','com','ind'].forEach(k=>{
+    let el=document.getElementById('tax-'+k);
+    if(el) el.value=state['tax'+k.charAt(0).toUpperCase()+k.slice(1)];
+  });
+  ['police','fire','health','edu','roads'].forEach(k=>{
+    let el=document.getElementById('sp-'+k);
+    if(el) el.value=state['sp'+k.charAt(0).toUpperCase()+k.slice(1)];
+  });
+  document.getElementById('budget-panel').style.display='block';
+  updateBudget();
+}
+function closeBudget(){
+  // Save slider values to state
+  state.taxRes=parseInt(document.getElementById('tax-res').value);
+  state.taxCom=parseInt(document.getElementById('tax-com').value);
+  state.taxInd=parseInt(document.getElementById('tax-ind').value);
+  state.spPolice=parseInt(document.getElementById('sp-police').value);
+  state.spFire=parseInt(document.getElementById('sp-fire').value);
+  state.spHealth=parseInt(document.getElementById('sp-health').value);
+  state.spEdu=parseInt(document.getElementById('sp-edu').value);
+  state.spRoads=parseInt(document.getElementById('sp-roads').value);
+  document.getElementById('budget-panel').style.display='none';
+}
+function updateBudget(){
+  // Read sliders into state temporarily for calc
+  state.taxRes=parseInt(document.getElementById('tax-res').value)||8;
+  state.taxCom=parseInt(document.getElementById('tax-com').value)||10;
+  state.taxInd=parseInt(document.getElementById('tax-ind').value)||12;
+  state.spPolice=parseInt(document.getElementById('sp-police').value)||100;
+  state.spFire=parseInt(document.getElementById('sp-fire').value)||100;
+  state.spHealth=parseInt(document.getElementById('sp-health').value)||100;
+  state.spEdu=parseInt(document.getElementById('sp-edu').value)||100;
+  state.spRoads=parseInt(document.getElementById('sp-roads').value)||80;
+
+  let b=calcBudget();
+
+  // Update pct labels and amounts
+  document.getElementById('tax-res-pct').textContent=state.taxRes+'%';
+  document.getElementById('tax-com-pct').textContent=state.taxCom+'%';
+  document.getElementById('tax-ind-pct').textContent=state.taxInd+'%';
+  document.getElementById('tax-res-amt').textContent='$'+b.revRes.toLocaleString();
+  document.getElementById('tax-com-amt').textContent='$'+b.revCom.toLocaleString();
+  document.getElementById('tax-ind-amt').textContent='$'+b.revInd.toLocaleString();
+
+  document.getElementById('sp-police-pct').textContent=state.spPolice+'%';
+  document.getElementById('sp-fire-pct').textContent=state.spFire+'%';
+  document.getElementById('sp-health-pct').textContent=state.spHealth+'%';
+  document.getElementById('sp-edu-pct').textContent=state.spEdu+'%';
+  document.getElementById('sp-roads-pct').textContent=state.spRoads+'%';
+  document.getElementById('sp-police-amt').textContent='$'+b.spPolice.toLocaleString();
+  document.getElementById('sp-fire-amt').textContent='$'+b.spFire.toLocaleString();
+  document.getElementById('sp-health-amt').textContent='$'+b.spHealth.toLocaleString();
+  document.getElementById('sp-edu-amt').textContent='$'+b.spEdu.toLocaleString();
+  document.getElementById('sp-roads-amt').textContent='$'+b.spRoads.toLocaleString();
+
+  document.getElementById('bud-revenue').textContent='$'+b.revenue.toLocaleString();
+  document.getElementById('bud-spending').textContent='$'+b.spending.toLocaleString();
+  document.getElementById('bud-funds').textContent='$'+state.funds.toLocaleString();
+
+  let netEl=document.getElementById('budget-net');
+  let sign=b.net>=0?'+':'-';
+  netEl.textContent='NET THIS YEAR: '+sign+'$'+Math.abs(b.net).toLocaleString();
+  netEl.className='budget-net '+(b.net>=0?'surplus':'deficit');
+}
+
+// ============================================================
+// SAVE / LOAD
+// ============================================================
+function saveGame(){
+  let data={
+    grid:Array.from(state.grid,row=>Array.from(row)),
+    funds:state.funds,year:state.year,month:state.month,
+    pop:state.pop,approval:state.approval,
+    disastersEnabled:state.disastersEnabled,
+    cityName:state.cityName,
+    taxRes:state.taxRes,taxCom:state.taxCom,taxInd:state.taxInd,
+    spPolice:state.spPolice,spFire:state.spFire,spHealth:state.spHealth,
+    spEdu:state.spEdu,spRoads:state.spRoads,
+    npcCities:npcCities,hwPos:state._hwPos,swPos:state._swPos
+  };
+  try{localStorage.setItem('wavepusher_save',JSON.stringify(data));showMsg('💾 Game saved!');}
+  catch(e){showMsg('Save failed: '+e.message);}
+}
+function loadGame(){
+  try{
+    let raw=localStorage.getItem('wavepusher_save');
+    if(!raw){showMsg('No save found.');return;}
+    let data=JSON.parse(raw);
+    state.funds=data.funds;state.year=data.year;state.month=data.month||0;
+    state.pop=data.pop;state.approval=data.approval;
+    state.disastersEnabled=data.disastersEnabled!==undefined?data.disastersEnabled:true;
+    state.cityName=data.cityName||'Wavepusher';
+    for(let y=0;y<GRID;y++) for(let x=0;x<GRID;x++)
+      state.grid[y][x]=data.grid[y][x];
+    vehicles=[];monsters=[];fires=[];tradeRoutes=[];
+    if(data.npcCities) npcCities=data.npcCities;
+    if(data.hwPos) state._hwPos=data.hwPos;
+    if(data.swPos) state._swPos=data.swPos;
+    if(data.taxRes) state.taxRes=data.taxRes;
+    let btn=document.getElementById('btn-disasters');
+    btn.textContent=state.disastersEnabled?'⚠ ON':'⚠ OFF';
+    btn.classList.toggle('on', state.disastersEnabled);
+    showMsg('📂 Game loaded!');
+  } catch(e){showMsg('Load failed: '+e.message);}
+}
+
+// Start — title screen shown by default, user clicks to begin
+</script>
+</body>
+</html>
